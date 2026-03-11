@@ -22,12 +22,16 @@ def _find_column(df, *candidates):
 
 
 def load_excel(path: str) -> pd.DataFrame:
-    """Carga un archivo .xls o .xlsx en un DataFrame (columnas A a I)."""
+    """Carga un archivo .xls o .xlsx en un DataFrame.
+
+    Se leen todas las columnas disponibles y más adelante se recorta
+    a un máximo de 9 (A–I) para evitar errores cuando alguna hoja
+    tiene menos columnas.
+    """
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(f"No existe el archivo: {path}")
-    # Leer solo columnas A a I (índices 0-8)
-    df = pd.read_excel(path, usecols="A:I", engine="xlrd" if path.suffix.lower() == ".xls" else "openpyxl")
+    df = pd.read_excel(path, engine="xlrd" if path.suffix.lower() == ".xls" else "openpyxl")
     return df
 
 
