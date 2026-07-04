@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dispo · Consolidador</title>
+    <title>Disponibilidad · Consolidador</title>
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
@@ -34,9 +34,65 @@
         color: var(--text);
       }
       .shell {
-        max-width: 780px;
+        max-width: 1100px;
         margin: 0 auto;
         padding: 2.5rem 1.25rem 3rem;
+      }
+      .layout {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+      .layout .card-main {
+        flex: 1;
+        min-width: 0;
+      }
+      .top-varieties-panel {
+        width: 280px;
+        flex-shrink: 0;
+        display: none;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .top-varieties-panel.visible {
+        display: block;
+      }
+      .top-varieties-title {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.65rem;
+        line-height: 1.35;
+      }
+      .top-varieties-box {
+        width: 100%;
+        min-height: 240px;
+        font-size: 0.8rem;
+        line-height: 1.5;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.65rem 0.75rem;
+        resize: none;
+        background: #fafbfc;
+        color: var(--text);
+      }
+      .top-varieties-box:focus {
+        outline: none;
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.12);
+      }
+      @media (max-width: 860px) {
+        .layout {
+          flex-direction: column;
+        }
+        .top-varieties-panel {
+          width: 100%;
+        }
       }
       .header {
         text-align: center;
@@ -251,10 +307,11 @@
   <body>
     <div class="shell">
       <header class="header">
-        <h1>Dispo</h1>
+        <h1>Disponibilidad</h1>
         <p>Consolidador de archivos Excel</p>
       </header>
 
+      <div class="layout">
       <main class="card-main">
         <div id="messageArea"></div>
 
@@ -346,6 +403,18 @@
           ></textarea>
         </section>
       </main>
+
+      <aside class="top-varieties-panel" id="topVarietiesPanel">
+        <div class="top-varieties-title">Flor que puede darse de baja</div>
+        <textarea
+          id="topVarietiesBox"
+          class="top-varieties-box"
+          readonly
+          rows="12"
+          placeholder="Procesa archivos para ver el listado"
+        ></textarea>
+      </aside>
+      </div>
     </div>
 
     <script
@@ -384,6 +453,8 @@
         ];
         var messageArea = document.getElementById("messageArea");
         var resultSection = document.getElementById("resultSection");
+        var topVarietiesPanel = document.getElementById("topVarietiesPanel");
+        var topVarietiesBox = document.getElementById("topVarietiesBox");
         var resultInfo = document.getElementById("resultInfo");
         var resultText = document.getElementById("resultText");
         var submitBtn = document.getElementById("submitBtn");
@@ -520,6 +591,51 @@
             if (v > 6) v = 6;
             r[cajasKey] = v;
           });
+        }
+
+        function parseCajasRaw(value) {
+          var raw = String(value == null ? "" : value);
+          var m = raw.match(/-?\d+/);
+          var v = m ? parseInt(m[0], 10) : 0;
+          return isNaN(v) ? 0 : v;
+        }
+
+        function computeTopVarieties(allRows) {
+          if (!allRows.length) return [];
+          var sample = allRows[0] || {};
+          var cajasKey = findKey(sample, ["# cajas", "cajas"]);
+          var variedadKey = findKey(sample, ["variedad"]);
+          if (!cajasKey || !variedadKey) return [];
+
+          var totals = new Map();
+          allRows.forEach(function (r) {
+            var variedad = String(
+              r[variedadKey] == null ? "" : r[variedadKey],
+            ).trim();
+            if (!variedad) return;
+            var key = variedad.toLowerCase();
+            var cajas = parseCajasRaw(r[cajasKey]);
+            if (!totals.has(key)) {
+              totals.set(key, { name: variedad, total: 0 });
+            }
+            totals.get(key).total += cajas;
+          });
+
+          return Array.from(totals.values())
+            .sort(function (a, b) {
+              if (b.total !== a.total) return b.total - a.total;
+              return a.name.localeCompare(b.name, "es", { sensitivity: "base" });
+            })
+            .slice(0, 5);
+        }
+
+        function formatTopVarieties(list) {
+          if (!list.length) return "Sin variedades detectadas.";
+          return list
+            .map(function (item, i) {
+              return i + 1 + ". " + item.name + " — " + item.total;
+            })
+            .join("\n");
         }
 
         function normalizeSpecies(name) {
@@ -687,9 +803,12 @@
             Promise.all(files.map(readSheetFromFile))
               .then(function (results) {
                 var allRows = [].concat.apply([], results);
+                var topVarieties = computeTopVarieties(allRows);
                 var processedRows = processRows(allRows);
                 var tsv = rowsToTsvNoHeader(processedRows);
                 resultText.value = tsv;
+                topVarietiesBox.value = formatTopVarieties(topVarieties);
+                topVarietiesPanel.classList.add("visible");
                 resultInfo.textContent =
                   processedRows.length +
                   " filas (incluyendo títulos y separadores)";
@@ -745,7 +864,9 @@
           .getElementById("newBtn")
           .addEventListener("click", function () {
             resultSection.classList.remove("visible");
+            topVarietiesPanel.classList.remove("visible");
             resultText.value = "";
+            topVarietiesBox.value = "";
             excelWorkbook = null;
             document.getElementById("copyFeedback").textContent = "";
             clearMessage();
