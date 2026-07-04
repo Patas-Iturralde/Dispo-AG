@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-App web local para unir 3 archivos Excel en uno siguiendo las reglas de negocio.
+App web local para unir 4 archivos Excel en uno siguiendo las reglas de negocio.
 No requiere tkinter; se abre en el navegador.
 """
 
@@ -42,20 +42,22 @@ def process():
     f1 = request.files.get("file1")
     f2 = request.files.get("file2")
     f3 = request.files.get("file3")
-    if not all([f1, f2, f3]) or not all([f1.filename, f2.filename, f3.filename]):
-        flash("Debes seleccionar los 3 archivos.", "error")
+    f4 = request.files.get("file4")
+    uploaded = [f for f in (f1, f2, f3, f4) if f and f.filename]
+    if not uploaded:
+        flash("Debes seleccionar al menos 1 archivo.", "error")
         return redirect(url_for("index"))
 
     # Guardar temporales para que el procesador los lea por ruta
     tmpdir = tempfile.mkdtemp()
     paths = []
     try:
-        for i, f in enumerate([f1, f2, f3]):
+        for i, f in enumerate(uploaded):
             ext = Path(f.filename).suffix or ".xls"
             path = os.path.join(tmpdir, f"upload_{i}{ext}")
             f.save(path)
             paths.append(path)
-        _result_df = process_three_files(paths[0], paths[1], paths[2])
+        _result_df = process_three_files(*paths)
         _result_tsv = dataframe_to_clipboard_text(_result_df, include_header=True)
         _result_tsv_no_header = dataframe_to_clipboard_text(_result_df, include_header=False)
         flash(f"Procesado correctamente: {len(_result_df)} filas.", "success")
@@ -90,7 +92,7 @@ def reset():
 def download_excel():
     global _result_df
     if _result_df is None:
-        flash("No hay datos para exportar. Procesa los 3 archivos primero.", "error")
+        flash("No hay datos para exportar. Procesa al menos 1 archivo primero.", "error")
         return redirect(url_for("index"))
     buf = io.BytesIO()
     _result_df.to_excel(buf, index=False, engine="openpyxl")

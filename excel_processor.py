@@ -1,5 +1,6 @@
-# excel_processor.py - Lógica de unión y transformación de los 3 Excel
+# excel_processor.py - Lógica de unión y transformación de los Excel
 
+import re
 import pandas as pd
 from pathlib import Path
 
@@ -35,22 +36,43 @@ def load_excel(path: str) -> pd.DataFrame:
     return df
 
 
-def process_three_files(path1: str, path2: str, path3: str) -> pd.DataFrame:
+def _normalize_species(name) -> str:
+    """Clave única por especie (sin distinguir mayúsculas)."""
+    if pd.isna(name):
+        return ""
+    return str(name).strip().upper()
+
+
+def _largo_numeric(val) -> int:
+    """Extrae número de largo para ordenar (50, 60, 70…)."""
+    if pd.isna(val):
+        return 0
+    m = re.search(r"\d+", str(val))
+    return int(m.group()) if m else 0
+
+
+def _order_tipo(tipo_norm: str):
+    if tipo_norm == "ROSAS":
+        return (0, tipo_norm)
+    return (1, tipo_norm)
+
+
+def process_three_files(*paths: str) -> pd.DataFrame:
     """
-    Une los 3 archivos Excel y aplica las reglas:
+    Une los archivos Excel y aplica las reglas:
     - Unir en una hoja
     - Eliminar columnas C, E, G, I
     - Cap # Cajas a máximo 6
-    - Ordenar por Tipo flor y Variedad
-    - Agrupar por Tipo flor con fila vacía y título en A entre grupos
+    - Ordenar por Variedad y Largo dentro de cada especie
+    - Agrupar por Tipo flor (especie única) con fila vacía y título en A entre grupos
     - Eliminar columna Tipo flor
     """
     dfs = []
-    for path in (path1, path2, path3):
+    for path in paths:
         df = load_excel(path)
         dfs.append(df)
 
-    # 1. Unir los 3 archivos
+    # 1. Unir todos los archivos
     consolidated = pd.concat(dfs, ignore_index=True)
 
     # Asegurar que tenemos al menos 9 columnas (A-I); si hay más, tomar las primeras 9
@@ -72,43 +94,46 @@ def process_three_files(path1: str, path2: str, path3: str) -> pd.DataFrame:
         consolidated[cajas_col] = pd.to_numeric(consolidated[cajas_col], errors="coerce").fillna(0).astype(int)
         consolidated[cajas_col] = consolidated[cajas_col].clip(upper=6)
 
-    # 4. Ordenar por "Tipo flor" y luego "Variedad"
+    # 4. Columnas de orden y agrupación
     tipo_col = _find_column(consolidated, "tipo flor", "Tipo flor", "Tipo Flor")
     variedad_col = _find_column(consolidated, "variedad", "Variedad")
+    largo_col = _find_column(consolidated, "largo", "longitud", "cm", "Largo")
 
-    if tipo_col is not None and variedad_col is not None:
-        consolidated = consolidated.sort_values(by=[tipo_col, variedad_col], na_position="last")
-    elif tipo_col is not None:
-        consolidated = consolidated.sort_values(by=[tipo_col], na_position="last")
-
-    # 5. Separar cada grupo de "Tipo flor": primero ROSAS, luego el resto en orden alfabético
     if tipo_col is None:
         return consolidated
 
+    consolidated["_tipo_norm"] = consolidated[tipo_col].apply(_normalize_species)
+
     result_rows = []
     first_col_name = consolidated.columns[0]
-    groups = list(consolidated.groupby(tipo_col, sort=False))
-
-    def _order_tipo(t):
-        name = str(t).strip().upper() if pd.notna(t) else ""
-        if name == "ROSAS":
-            return (0, name)
-        return (1, name)
-
+    groups = list(consolidated.groupby("_tipo_norm", sort=False))
     groups.sort(key=lambda g: _order_tipo(g[0]))
     n_groups = len(groups)
 
-    for i, (tipo, group) in enumerate(groups):
-        # Título del tipo de flor en la celda A (primera columna) antes de cada grupo
-        title_row = {first_col_name: str(tipo).strip() if pd.notna(tipo) else ""}
+    for i, (tipo_norm, group) in enumerate(groups):
+        group = group.copy()
+        sort_cols = []
+        if variedad_col:
+            sort_cols.append(variedad_col)
+        if largo_col:
+            group["_largo_num"] = group[largo_col].apply(_largo_numeric)
+            sort_cols.append("_largo_num")
+        if sort_cols:
+            group = group.sort_values(by=sort_cols, na_position="last")
+        group = group.drop(columns=["_tipo_norm", "_largo_num"], errors="ignore")
+
+        display_tipo = tipo_norm or (
+            str(group[tipo_col].iloc[0]).strip() if len(group) else ""
+        )
+        title_row = {first_col_name: display_tipo}
         for c in consolidated.columns:
-            if c != first_col_name:
-                title_row[c] = ""
+            if c.startswith("_") or c == first_col_name:
+                continue
+            title_row[c] = ""
         result_rows.append(pd.DataFrame([title_row]))
-        result_rows.append(group)
-        # 1 fila vacía entre cada tipo (no después del último)
+        result_rows.append(group.drop(columns=["_tipo_norm"], errors="ignore"))
         if i < n_groups - 1:
-            empty_row = {c: "" for c in consolidated.columns}
+            empty_row = {c: "" for c in consolidated.columns if not str(c).startswith("_")}
             result_rows.append(pd.DataFrame([empty_row]))
 
     if not result_rows:

@@ -70,7 +70,7 @@
     }
     .drop-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 1rem;
       margin-bottom: 1.5rem;
     }
@@ -262,6 +262,12 @@
             <div class="dz-hint">Arrastra aquí o haz clic para seleccionar</div>
             <div class="dz-filename" id="name3">&nbsp;</div>
           </label>
+          <label class="file-label" id="dz3" for="file4">
+            <input type="file" name="file4" accept=".xls,.xlsx" id="file4">
+            <div class="dz-title">Archivo 4</div>
+            <div class="dz-hint">Arrastra aquí o haz clic para seleccionar</div>
+            <div class="dz-filename" id="name4">&nbsp;</div>
+          </label>
         </div>
         <button type="submit" class="btn btn-primary btn-process">Unir y procesar</button>
       </form>
@@ -290,9 +296,9 @@
           crossorigin="anonymous"></script>
   <script>
     (function() {
-      var inputs = [document.getElementById('file1'), document.getElementById('file2'), document.getElementById('file3')];
-      var names = [document.getElementById('name1'), document.getElementById('name2'), document.getElementById('name3')];
-      var zones = [document.getElementById('dz0'), document.getElementById('dz1'), document.getElementById('dz2')];
+      var inputs = [document.getElementById('file1'), document.getElementById('file2'), document.getElementById('file3'), document.getElementById('file4')];
+      var names = [document.getElementById('name1'), document.getElementById('name2'), document.getElementById('name3'), document.getElementById('name4')];
+      var zones = [document.getElementById('dz0'), document.getElementById('dz1'), document.getElementById('dz2'), document.getElementById('dz3')];
 
       function updateName(i) {
         var f = inputs[i] && inputs[i].files[0];

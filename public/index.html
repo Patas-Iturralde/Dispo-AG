@@ -72,7 +72,7 @@
       }
       .drop-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 1rem;
         margin-bottom: 1.5rem;
       }
@@ -252,7 +252,7 @@
     <div class="shell">
       <header class="header">
         <h1>Dispo</h1>
-        <p>Consolidador de 3 archivos Excel</p>
+        <p>Consolidador de archivos Excel</p>
       </header>
 
       <main class="card-main">
@@ -284,6 +284,14 @@
                 Arrastra aquí o haz clic para seleccionar
               </div>
               <div class="dz-filename" id="name3">&nbsp;</div>
+            </label>
+            <label class="file-label" id="dz3" for="file4">
+              <input type="file" name="file4" accept=".xls,.xlsx" id="file4" />
+              <div class="dz-title">Archivo 4</div>
+              <div class="dz-hint">
+                Arrastra aquí o haz clic para seleccionar
+              </div>
+              <div class="dz-filename" id="name4">&nbsp;</div>
             </label>
           </div>
           <button
@@ -360,16 +368,19 @@
           document.getElementById("file1"),
           document.getElementById("file2"),
           document.getElementById("file3"),
+          document.getElementById("file4"),
         ];
         var names = [
           document.getElementById("name1"),
           document.getElementById("name2"),
           document.getElementById("name3"),
+          document.getElementById("name4"),
         ];
         var zones = [
           document.getElementById("dz0"),
           document.getElementById("dz1"),
           document.getElementById("dz2"),
+          document.getElementById("dz3"),
         ];
         var messageArea = document.getElementById("messageArea");
         var resultSection = document.getElementById("resultSection");
@@ -378,7 +389,7 @@
         var submitBtn = document.getElementById("submitBtn");
         var excelWorkbook = null;
         var finalHeaders = ["# Cajas", "Grado", "Largo", "Variedad"];
-        var droppedFiles = [null, null, null];
+        var droppedFiles = [null, null, null, null];
 
         function showMessage(text, type) {
           messageArea.innerHTML =
@@ -511,7 +522,16 @@
           });
         }
 
-        // Normaliza filas y construye salida tipo “ANTES”
+        function normalizeSpecies(name) {
+          return String(name || "").trim().toUpperCase();
+        }
+
+        function largoSortKey(largo) {
+          var m = String(largo || "").match(/\d+/);
+          return m ? parseInt(m[0], 10) : 0;
+        }
+
+        // Normaliza filas y construye salida agrupada por especie
         function processRows(allRows) {
           if (!allRows.length)
             throw new Error("No se encontraron filas en los Excel.");
@@ -554,15 +574,13 @@
 
           var groupsMap = new Map();
           normRows.forEach(function (r) {
-            var key = r.tipoFlor || "";
+            var key = normalizeSpecies(r.tipoFlor);
             if (!groupsMap.has(key)) groupsMap.set(key, []);
             groupsMap.get(key).push(r);
           });
 
           function orderTipo(t) {
-            var name = String(t || "")
-              .trim()
-              .toUpperCase();
+            var name = normalizeSpecies(t);
             if (name === "ROSAS") return [0, name];
             return [1, name];
           }
@@ -578,9 +596,11 @@
           tipos.forEach(function (t) {
             var rows = groupsMap.get(t);
             rows.sort(function (a, b) {
-              return a.variedad.localeCompare(b.variedad, "es", {
+              var byVariedad = a.variedad.localeCompare(b.variedad, "es", {
                 sensitivity: "base",
               });
+              if (byVariedad !== 0) return byVariedad;
+              return largoSortKey(a.largo) - largoSortKey(b.largo);
             });
           });
 
@@ -654,25 +674,19 @@
             var f1 = droppedFiles[0] || (inputs[0] && inputs[0].files[0]);
             var f2 = droppedFiles[1] || (inputs[1] && inputs[1].files[0]);
             var f3 = droppedFiles[2] || (inputs[2] && inputs[2].files[0]);
-            if (!f1 || !f2 || !f3) {
-              showMessage("Debes seleccionar los 3 archivos.", "error");
+            var f4 = droppedFiles[3] || (inputs[3] && inputs[3].files[0]);
+            var files = [f1, f2, f3, f4].filter(Boolean);
+            if (files.length === 0) {
+              showMessage("Selecciona al menos 1 archivo.", "error");
               return;
             }
             clearMessage();
             submitBtn.disabled = true;
             submitBtn.textContent = "Procesando…";
 
-            Promise.all([
-              readSheetFromFile(f1),
-              readSheetFromFile(f2),
-              readSheetFromFile(f3),
-            ])
+            Promise.all(files.map(readSheetFromFile))
               .then(function (results) {
-                var allRows = [].concat(
-                  results[0] || [],
-                  results[1] || [],
-                  results[2] || [],
-                );
+                var allRows = [].concat.apply([], results);
                 var processedRows = processRows(allRows);
                 var tsv = rowsToTsvNoHeader(processedRows);
                 resultText.value = tsv;
@@ -735,11 +749,11 @@
             excelWorkbook = null;
             document.getElementById("copyFeedback").textContent = "";
             clearMessage();
-            droppedFiles = [null, null, null];
+            droppedFiles = [null, null, null, null];
             inputs.forEach(function (inp) {
               if (inp) inp.value = "";
             });
-            [0, 1, 2].forEach(function (i) {
+            [0, 1, 2, 3].forEach(function (i) {
               updateName(i);
             });
           });
