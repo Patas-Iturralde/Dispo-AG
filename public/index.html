@@ -642,6 +642,13 @@
           return String(name || "").trim().toUpperCase();
         }
 
+        function normalizeVariedad(name) {
+          return String(name || "")
+            .trim()
+            .replace(/\s+/g, " ")
+            .toUpperCase();
+        }
+
         function largoSortKey(largo) {
           var m = String(largo || "").match(/\d+/);
           return m ? parseInt(m[0], 10) : 0;
@@ -712,11 +719,12 @@
           tipos.forEach(function (t) {
             var rows = groupsMap.get(t);
             rows.sort(function (a, b) {
-              var byVariedad = a.variedad.localeCompare(b.variedad, "es", {
-                sensitivity: "base",
-              });
-              if (byVariedad !== 0) return byVariedad;
-              return largoSortKey(a.largo) - largoSortKey(b.largo);
+              var byLargo = largoSortKey(a.largo) - largoSortKey(b.largo);
+              if (byLargo !== 0) return byLargo;
+
+              var na = normalizeVariedad(a.variedad);
+              var nb = normalizeVariedad(b.variedad);
+              return na.localeCompare(nb, "es", { sensitivity: "base" });
             });
           });
 
@@ -739,6 +747,64 @@
           });
 
           return output;
+        }
+
+        function appendSmilaxSection(rows) {
+          if (!rows || !rows.length) return;
+
+          var hasSmilaxTitle = rows.some(function (r) {
+            return (
+              r &&
+              r.isTitle &&
+              String(r.tipoFlor || "")
+                .trim()
+                .toUpperCase() === "SMILAX"
+            );
+          });
+          if (hasSmilaxTitle) return;
+
+          var lastIsSeparator = !!(
+            rows[rows.length - 1] && rows[rows.length - 1].isSeparator
+          );
+
+          // Separador en blanco entre especies (igual que ROSAS/AMARANTHUS)
+          if (!lastIsSeparator) rows.push({ isSeparator: true });
+
+          rows.push({ tipoFlor: "SMILAX", isTitle: true });
+          // Formato: [cajas, grado, largo, variedad]
+          rows.push({
+            tipoFlor: "SMILAX",
+            cajas: 5,
+            grado: "QB",
+            largo: "120 cm",
+            variedad: "SMILAX GARLAND",
+            isTitle: false,
+          });
+        }
+
+        function prependAgroganaHeader(rows) {
+          if (!rows || !rows.length) return;
+
+          var title0 = String((rows[0] && rows[0].tipoFlor) || "")
+            .trim()
+            .toUpperCase();
+
+          var now = new Date();
+          var dd = String(now.getDate()).padStart(2, "0");
+          var mm = String(now.getMonth() + 1).padStart(2, "0");
+          var yyyy = String(now.getFullYear());
+          var dateStr = dd + "/" + mm + "/" + yyyy;
+
+          var title1 = String((rows[1] && rows[1].tipoFlor) || "")
+            .trim()
+            .toUpperCase();
+
+          if (rows[0].isTitle && title0 === "AGROGANA" && title1 === dateStr.toUpperCase()) {
+            return;
+          }
+
+          rows.unshift({ tipoFlor: dateStr, isTitle: true });
+          rows.unshift({ tipoFlor: "Agrogana", isTitle: true });
         }
 
         function rowsToTsvNoHeader(rows) {
@@ -805,6 +871,8 @@
                 var allRows = [].concat.apply([], results);
                 var topVarieties = computeTopVarieties(allRows);
                 var processedRows = processRows(allRows);
+                prependAgroganaHeader(processedRows);
+                appendSmilaxSection(processedRows);
                 var tsv = rowsToTsvNoHeader(processedRows);
                 resultText.value = tsv;
                 topVarietiesBox.value = formatTopVarieties(topVarieties);

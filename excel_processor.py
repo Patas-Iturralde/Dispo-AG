@@ -1,6 +1,7 @@
 # excel_processor.py - Lógica de unión y transformación de los Excel
 
 import re
+import datetime as _dt
 import pandas as pd
 from pathlib import Path
 
@@ -57,13 +58,112 @@ def _order_tipo(tipo_norm: str):
     return (1, tipo_norm)
 
 
+def _append_smilax_section(result: pd.DataFrame) -> pd.DataFrame:
+    """
+    Añade al final un bloque fijo:
+    SMILAX
+    5 QB SMILAX GARLAND
+    manteniendo el formato TSV/Excel del proyecto.
+    """
+
+    if result is None or result.empty:
+        return result
+
+    cols = list(result.columns)
+    if not cols:
+        return result
+
+    first_col = cols[0]
+
+    def norm_cell(val) -> str:
+        if pd.isna(val):
+            return ""
+        return str(val).strip().upper()
+
+    # Evita duplicar si ya existe una fila-título "SMILAX" (con el resto en blanco)
+    title_mask = result[first_col].apply(norm_cell).eq("SMILAX")
+    other_empty = pd.Series(True, index=result.index)
+    for c in cols[1:]:
+        other_empty &= result[c].apply(lambda x: norm_cell(x) == "")
+    if (title_mask & other_empty).any():
+        return result
+
+    # Determinar columnas (por nombre) para colocar 5 / QB / SMILAX GARLAND
+    cajas_col = _find_column(result, "# cajas", "cajas", "Cajas", "# Cajas") or first_col
+    grado_col = _find_column(result, "grado", "tipo") or (cols[1] if len(cols) > 1 else None)
+    largo_col = _find_column(result, "largo", "longitud", "cm", "Largo") or (
+        cols[2] if len(cols) > 2 else None
+    )
+    variedad_col = _find_column(result, "variedad", "Variedad") or (
+        cols[3] if len(cols) > 3 else None
+    )
+
+    title_row = {c: "" for c in cols}
+    title_row[first_col] = "SMILAX"
+
+    entry_row = {c: "" for c in cols}
+    if cajas_col:
+        entry_row[cajas_col] = 5
+    if grado_col:
+        entry_row[grado_col] = "QB"
+    if largo_col:
+        entry_row[largo_col] = "120 cm"
+    if variedad_col:
+        entry_row[variedad_col] = "SMILAX GARLAND"
+
+    # Insertar separador en blanco solo si el final actual no está ya vacío
+    last_is_empty = all(norm_cell(result.iloc[-1][c]) == "" for c in cols)
+    pieces = []
+    if not last_is_empty:
+        pieces.append(pd.DataFrame([{c: "" for c in cols}]))
+    pieces.append(pd.DataFrame([title_row]))
+    pieces.append(pd.DataFrame([entry_row]))
+
+    return pd.concat([result] + pieces, ignore_index=True)
+
+
+def _prepend_agrogana_header(result: pd.DataFrame) -> pd.DataFrame:
+    """
+    Antepone al inicio:
+    - Agrogana
+    - Fecha de hoy (dd/mm/YYYY)
+    """
+
+    if result is None or result.empty:
+        return result
+
+    cols = list(result.columns)
+    if not cols:
+        return result
+
+    first_col = cols[0]
+    date_str = _dt.date.today().strftime("%d/%m/%Y")
+
+    def norm_cell(val) -> str:
+        if pd.isna(val):
+            return ""
+        return str(val).strip().upper()
+
+    # Evita duplicar si ya existe el header
+    if len(result) >= 2 and norm_cell(result.iloc[0][first_col]) == "AGROGANA":
+        if norm_cell(result.iloc[1][first_col]) == norm_cell(date_str):
+            return result
+
+    header1 = {c: "" for c in cols}
+    header1[first_col] = "Agrogana"
+    header2 = {c: "" for c in cols}
+    header2[first_col] = date_str
+
+    return pd.concat([pd.DataFrame([header1]), pd.DataFrame([header2]), result], ignore_index=True)
+
+
 def process_three_files(*paths: str) -> pd.DataFrame:
     """
     Une los archivos Excel y aplica las reglas:
     - Unir en una hoja
     - Eliminar columnas C, E, G, I
     - Cap # Cajas a máximo 6
-    - Ordenar por Variedad y Largo dentro de cada especie
+    - Ordenar por Largo y luego Variedad dentro de cada especie
     - Agrupar por Tipo flor (especie única) con fila vacía y título en A entre grupos
     - Eliminar columna Tipo flor
     """
@@ -113,14 +213,17 @@ def process_three_files(*paths: str) -> pd.DataFrame:
     for i, (tipo_norm, group) in enumerate(groups):
         group = group.copy()
         sort_cols = []
-        if variedad_col:
-            sort_cols.append(variedad_col)
         if largo_col:
             group["_largo_num"] = group[largo_col].apply(_largo_numeric)
             sort_cols.append("_largo_num")
+        if variedad_col:
+            group["_variedad_norm"] = group[variedad_col].apply(
+                lambda x: "" if pd.isna(x) else str(x).strip().upper()
+            )
+            sort_cols.append("_variedad_norm")
         if sort_cols:
             group = group.sort_values(by=sort_cols, na_position="last")
-        group = group.drop(columns=["_tipo_norm", "_largo_num"], errors="ignore")
+        group = group.drop(columns=["_tipo_norm", "_variedad_norm", "_largo_num"], errors="ignore")
 
         display_tipo = tipo_norm or (
             str(group[tipo_col].iloc[0]).strip() if len(group) else ""
@@ -144,6 +247,12 @@ def process_three_files(*paths: str) -> pd.DataFrame:
     # 6. Eliminar completamente la columna "Tipo flor"
     if tipo_col in result.columns:
         result = result.drop(columns=[tipo_col])
+
+    # 7. Agregar título Agrogana + fecha
+    result = _prepend_agrogana_header(result)
+
+    # 7. Añadir sección fija SMILAX al final (si no existe ya)
+    result = _append_smilax_section(result)
 
     return result
 
