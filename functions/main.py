@@ -32,7 +32,8 @@ def processFiles(request):
     f2 = request.files.get("file2")
     f3 = request.files.get("file3")
     f4 = request.files.get("file4")
-    uploaded = [f for f in (f1, f2, f3, f4) if f and f.filename]
+    f5 = request.files.get("file5")
+    uploaded = [f for f in (f1, f2, f3, f4, f5) if f and f.filename]
 
     if not uploaded:
         return (

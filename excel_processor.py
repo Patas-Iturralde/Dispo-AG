@@ -163,7 +163,7 @@ def process_three_files(*paths: str) -> pd.DataFrame:
     - Unir en una hoja
     - Eliminar columnas C, E, G, I
     - Cap # Cajas a máximo 6
-    - Ordenar por Largo y luego Variedad dentro de cada especie
+    - Ordenar por Variedad y luego Largo dentro de cada especie
     - Agrupar por Tipo flor (especie única) con fila vacía y título en A entre grupos
     - Eliminar columna Tipo flor
     """
@@ -213,14 +213,14 @@ def process_three_files(*paths: str) -> pd.DataFrame:
     for i, (tipo_norm, group) in enumerate(groups):
         group = group.copy()
         sort_cols = []
-        if largo_col:
-            group["_largo_num"] = group[largo_col].apply(_largo_numeric)
-            sort_cols.append("_largo_num")
         if variedad_col:
             group["_variedad_norm"] = group[variedad_col].apply(
                 lambda x: "" if pd.isna(x) else str(x).strip().upper()
             )
             sort_cols.append("_variedad_norm")
+        if largo_col:
+            group["_largo_num"] = group[largo_col].apply(_largo_numeric)
+            sort_cols.append("_largo_num")
         if sort_cols:
             group = group.sort_values(by=sort_cols, na_position="last")
         group = group.drop(columns=["_tipo_norm", "_variedad_norm", "_largo_num"], errors="ignore")

@@ -70,9 +70,12 @@
     }
     .drop-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 1rem;
       margin-bottom: 1.5rem;
+    }
+    @media (max-width: 900px) {
+      .drop-grid { grid-template-columns: repeat(3, 1fr); }
     }
     @media (max-width: 640px) {
       .drop-grid { grid-template-columns: 1fr; }
@@ -268,6 +271,12 @@
             <div class="dz-hint">Arrastra aquí o haz clic para seleccionar</div>
             <div class="dz-filename" id="name4">&nbsp;</div>
           </label>
+          <label class="file-label" id="dz4" for="file5">
+            <input type="file" name="file5" accept=".xls,.xlsx" id="file5">
+            <div class="dz-title">Archivo 5</div>
+            <div class="dz-hint">Arrastra aquí o haz clic para seleccionar</div>
+            <div class="dz-filename" id="name5">&nbsp;</div>
+          </label>
         </div>
         <button type="submit" class="btn btn-primary btn-process">Unir y procesar</button>
       </form>
@@ -296,9 +305,9 @@
           crossorigin="anonymous"></script>
   <script>
     (function() {
-      var inputs = [document.getElementById('file1'), document.getElementById('file2'), document.getElementById('file3'), document.getElementById('file4')];
-      var names = [document.getElementById('name1'), document.getElementById('name2'), document.getElementById('name3'), document.getElementById('name4')];
-      var zones = [document.getElementById('dz0'), document.getElementById('dz1'), document.getElementById('dz2'), document.getElementById('dz3')];
+      var inputs = [document.getElementById('file1'), document.getElementById('file2'), document.getElementById('file3'), document.getElementById('file4'), document.getElementById('file5')];
+      var names = [document.getElementById('name1'), document.getElementById('name2'), document.getElementById('name3'), document.getElementById('name4'), document.getElementById('name5')];
+      var zones = [document.getElementById('dz0'), document.getElementById('dz1'), document.getElementById('dz2'), document.getElementById('dz3'), document.getElementById('dz4')];
 
       function updateName(i) {
         var f = inputs[i] && inputs[i].files[0];
