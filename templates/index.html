@@ -72,7 +72,16 @@
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .file-reminder {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin: 0 0 1.25rem 0;
+      line-height: 1.45;
+    }
+    .file-reminder.hidden {
+      display: none;
     }
     @media (max-width: 900px) {
       .drop-grid { grid-template-columns: repeat(3, 1fr); }
@@ -278,6 +287,9 @@
             <div class="dz-filename" id="name5">&nbsp;</div>
           </label>
         </div>
+        <p class="file-reminder" id="fileReminder">
+          Añadir el archivo de Tallos 25 y Eb para los sweet pea y Tallos 5 y Qb para los amaranthus
+        </p>
         <button type="submit" class="btn btn-primary btn-process">Unir y procesar</button>
       </form>
 
@@ -308,6 +320,14 @@
       var inputs = [document.getElementById('file1'), document.getElementById('file2'), document.getElementById('file3'), document.getElementById('file4'), document.getElementById('file5')];
       var names = [document.getElementById('name1'), document.getElementById('name2'), document.getElementById('name3'), document.getElementById('name4'), document.getElementById('name5')];
       var zones = [document.getElementById('dz0'), document.getElementById('dz1'), document.getElementById('dz2'), document.getElementById('dz3'), document.getElementById('dz4')];
+      var fileReminder = document.getElementById('fileReminder');
+
+      function updateFileReminder() {
+        if (!fileReminder) return;
+        var hasFile = inputs.some(function(inp) { return inp && inp.files[0]; });
+        if (hasFile) fileReminder.classList.add('hidden');
+        else fileReminder.classList.remove('hidden');
+      }
 
       function updateName(i) {
         var f = inputs[i] && inputs[i].files[0];
@@ -318,6 +338,7 @@
           names[i].textContent = '\u00a0';
           zones[i].classList.remove('has-file');
         }
+        updateFileReminder();
       }
 
       inputs.forEach(function(inp, i) {

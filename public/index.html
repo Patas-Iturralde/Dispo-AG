@@ -130,7 +130,16 @@
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 1rem;
-        margin-bottom: 1.5rem;
+        margin-bottom: 0.85rem;
+      }
+      .file-reminder {
+        font-size: 0.875rem;
+        color: var(--muted);
+        margin: 0 0 1.25rem 0;
+        line-height: 1.45;
+      }
+      .file-reminder.hidden {
+        display: none;
       }
       @media (max-width: 900px) {
         .drop-grid {
@@ -307,6 +316,332 @@
         border-color: var(--border-focus);
         box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.15);
       }
+
+      .notes-fab {
+        position: fixed;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 1050;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: none;
+        background: var(--accent);
+        color: #fff;
+        font-size: 1.35rem;
+        font-weight: 700;
+        font-style: italic;
+        font-family: Georgia, "Times New Roman", serif;
+        line-height: 1;
+        cursor: pointer;
+        box-shadow: 0 4px 14px rgba(76, 110, 245, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, transform 0.15s;
+      }
+      .notes-fab:hover {
+        background: var(--accent-hover);
+        transform: scale(1.05);
+      }
+      .notes-panel {
+        position: fixed;
+        right: 1.25rem;
+        bottom: 5rem;
+        z-index: 1050;
+        width: min(340px, calc(100vw - 2rem));
+        max-height: min(420px, calc(100vh - 7rem));
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+        display: none;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .notes-panel.open {
+        display: flex;
+      }
+      .notes-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 1rem;
+        border-bottom: 1px solid var(--border);
+      }
+      .notes-panel-header h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .notes-panel-close {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-size: 1.25rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0 0.25rem;
+      }
+      .notes-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.85rem 1rem;
+        margin: 0;
+        list-style: none;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--text);
+        min-height: 120px;
+      }
+      .notes-list li {
+        margin-bottom: 0.45rem;
+        padding-left: 0;
+      }
+      .notes-list li::before {
+        content: "- ";
+      }
+      .notes-list .notes-empty {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+      .notes-list .notes-empty::before {
+        content: none;
+      }
+      .notes-form {
+        display: flex;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem 1rem;
+        border-top: 1px solid var(--border);
+      }
+      .notes-form input {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.45rem 0.65rem;
+        font-size: 0.85rem;
+      }
+      .notes-form input:focus {
+        outline: none;
+        border-color: var(--border-focus);
+        box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.15);
+      }
+      .notes-form button {
+        border: none;
+        border-radius: var(--radius-sm);
+        background: var(--accent);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.45rem 0.75rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .notes-form button:hover {
+        background: var(--accent-hover);
+      }
+
+      .main-tabs {
+        display: flex;
+        gap: 0;
+        margin-bottom: 1.25rem;
+        border-bottom: 2px solid var(--border);
+      }
+      .main-tabs .tab-btn {
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 0.7rem 1.15rem;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: color 0.15s, border-color 0.15s;
+      }
+      .main-tabs .tab-btn:hover {
+        color: var(--text);
+      }
+      .main-tabs .tab-btn.active {
+        color: var(--accent);
+        border-bottom-color: var(--accent);
+      }
+      .tab-panel {
+        display: none;
+      }
+      .tab-panel.active {
+        display: block;
+      }
+
+      .promo-layout {
+        display: flex;
+        gap: 1rem;
+        align-items: stretch;
+        min-height: 520px;
+      }
+      .promo-day {
+        width: 260px;
+        flex-shrink: 0;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      .promo-day h3,
+      .promo-combos-card h3,
+      .promo-info h3 {
+        margin: 0 0 0.65rem 0;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .promo-day textarea,
+      .promo-info textarea {
+        flex: 1;
+        width: 100%;
+        min-height: 280px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.65rem 0.75rem;
+        font-size: 0.85rem;
+        line-height: 1.45;
+        resize: vertical;
+        background: #fafbfc;
+      }
+      .promo-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .promo-combos-card {
+        position: relative;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem 1.15rem 1.15rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        flex: 1;
+      }
+      .promo-price-box {
+        position: absolute;
+        top: 0.85rem;
+        right: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #f8f9fc;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 0.35rem 0.55rem;
+      }
+      .promo-price-box label {
+        margin: 0;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text);
+        white-space: nowrap;
+      }
+      .promo-price-box input {
+        width: 88px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.25rem 0.4rem;
+        font-size: 0.85rem;
+      }
+      .promo-combos-title {
+        margin: 0 0 1rem 0 !important;
+        padding-right: 150px;
+        font-size: 0.9rem !important;
+        color: var(--text) !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+      }
+      .promo-group {
+        margin-bottom: 1.15rem;
+      }
+      .promo-group:last-child {
+        margin-bottom: 0;
+      }
+      .promo-group-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+      }
+      .promo-group h4 {
+        margin: 0;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .promo-pack-badge {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--accent);
+        background: #eef2ff;
+        border: 1px solid #d6defa;
+        border-radius: 999px;
+        padding: 0.2rem 0.65rem;
+        white-space: nowrap;
+      }
+      .promo-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+      }
+      .promo-table th,
+      .promo-table td {
+        border: 1px solid var(--border);
+        padding: 0.45rem 0.55rem;
+        text-align: left;
+      }
+      .promo-table th {
+        background: #f4f6fa;
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      .promo-table .empty-msg {
+        color: var(--muted);
+        font-style: italic;
+      }
+      .promo-info {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        display: flex;
+        flex-direction: column;
+      }
+      .promo-info textarea {
+        min-height: 110px;
+      }
+      @media (max-width: 900px) {
+        .promo-layout {
+          flex-direction: column;
+        }
+        .promo-day {
+          width: 100%;
+        }
+        .promo-day textarea {
+          min-height: 140px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -316,6 +651,35 @@
         <p>Consolidador de archivos Excel</p>
       </header>
 
+      <nav class="main-tabs" role="tablist" aria-label="Secciones">
+        <button
+          type="button"
+          class="tab-btn active"
+          role="tab"
+          aria-selected="true"
+          data-tab="disponibilidad"
+          id="tabBtnDisponibilidad"
+        >
+          DISPONIBILIDAD
+        </button>
+        <button
+          type="button"
+          class="tab-btn"
+          role="tab"
+          aria-selected="false"
+          data-tab="promociones"
+          id="tabBtnPromociones"
+        >
+          Promociones
+        </button>
+      </nav>
+
+      <div
+        class="tab-panel active"
+        id="tab-disponibilidad"
+        role="tabpanel"
+        aria-labelledby="tabBtnDisponibilidad"
+      >
       <div class="layout">
       <main class="card-main">
         <div id="messageArea"></div>
@@ -364,6 +728,10 @@
               <div class="dz-filename" id="name5">&nbsp;</div>
             </label>
           </div>
+          <p class="file-reminder" id="fileReminder">
+            Añadir el archivo de Tallos 25 y Eb para los sweet pea y Tallos 5 y
+            Qb para los amaranthus
+          </p>
           <button
             type="submit"
             class="btn btn-primary btn-process"
@@ -428,7 +796,124 @@
         ></textarea>
       </aside>
       </div>
+      </div>
+
+      <div
+        class="tab-panel"
+        id="tab-promociones"
+        role="tabpanel"
+        aria-labelledby="tabBtnPromociones"
+      >
+        <div class="promo-layout">
+          <aside class="promo-day">
+            <h3>Promociones del día</h3>
+            <textarea
+              id="promoDayBox"
+              placeholder="Escribe aquí las promociones del día…"
+            ></textarea>
+          </aside>
+          <div class="promo-main">
+            <div class="promo-combos-card">
+              <div class="promo-price-box">
+                <label for="promoPrice">Precio:</label>
+                <input
+                  type="number"
+                  id="promoPrice"
+                  min="0"
+                  step="0.01"
+                  placeholder="0"
+                />
+              </div>
+              <h3 class="promo-combos-title">Cajas combo promocionales</h3>
+              <div class="promo-group">
+                <div class="promo-group-head">
+                  <h4>Colores cálidos (yellow, red, orange, peach, coral)</h4>
+                  <span class="promo-pack-badge" id="promoWarmPack"
+                    >Empaque caja: —</span
+                  >
+                </div>
+                <table class="promo-table" id="promoWarmTable">
+                  <thead>
+                    <tr>
+                      <th>Variedad</th>
+                      <th>Tallos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="2" class="empty-msg">
+                        Procesa archivos en DISPONIBILIDAD para generar combos.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="promo-group">
+                <div class="promo-group-head">
+                  <h4>
+                    Colores fríos (blue, white, purple, pink, green, sky blue)
+                  </h4>
+                  <span class="promo-pack-badge" id="promoColdPack"
+                    >Empaque caja: —</span
+                  >
+                </div>
+                <table class="promo-table" id="promoColdTable">
+                  <thead>
+                    <tr>
+                      <th>Variedad</th>
+                      <th>Tallos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="2" class="empty-msg">
+                        Procesa archivos en DISPONIBILIDAD para generar combos.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="promo-info">
+              <h3>Información</h3>
+              <textarea
+                id="promoInfoBox"
+                placeholder="Información adicional…"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <div class="notes-panel" id="notesPanel" aria-hidden="true">
+      <div class="notes-panel-header">
+        <h2>Notas</h2>
+        <button type="button" class="notes-panel-close" id="notesClose" aria-label="Cerrar">
+          ×
+        </button>
+      </div>
+      <ul class="notes-list" id="notesList"></ul>
+      <form class="notes-form" id="notesForm">
+        <input
+          type="text"
+          id="notesInput"
+          placeholder="Escribe una nota…"
+          maxlength="500"
+          autocomplete="off"
+        />
+        <button type="submit">Añadir</button>
+      </form>
+    </div>
+    <button
+      type="button"
+      class="notes-fab"
+      id="notesFab"
+      aria-label="Abrir notas"
+      title="Notas"
+    >
+      i
+    </button>
 
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
@@ -474,9 +959,12 @@
         var resultInfo = document.getElementById("resultInfo");
         var resultText = document.getElementById("resultText");
         var submitBtn = document.getElementById("submitBtn");
+        var fileReminder = document.getElementById("fileReminder");
         var excelWorkbook = null;
         var finalHeaders = ["# Cajas", "Grado", "Largo", "Variedad"];
         var droppedFiles = [null, null, null, null, null];
+        var lastPromoCandidates = [];
+        var MIN_COMBO_PRODUCTS = 3;
 
         function showMessage(text, type) {
           messageArea.innerHTML =
@@ -495,6 +983,19 @@
           return div.innerHTML;
         }
 
+        function updateFileReminder() {
+          if (!fileReminder) return;
+          var hasFile = false;
+          for (var i = 0; i < inputs.length; i++) {
+            if (droppedFiles[i] || (inputs[i] && inputs[i].files[0])) {
+              hasFile = true;
+              break;
+            }
+          }
+          if (hasFile) fileReminder.classList.add("hidden");
+          else fileReminder.classList.remove("hidden");
+        }
+
         function updateName(i) {
           var f = droppedFiles[i] || (inputs[i] && inputs[i].files[0]);
           if (f) {
@@ -504,6 +1005,7 @@
             names[i].textContent = "\u00a0";
             zones[i].classList.remove("has-file");
           }
+          updateFileReminder();
         }
 
         inputs.forEach(function (inp, i) {
@@ -653,6 +1155,410 @@
             })
             .join("\n");
         }
+
+        function isRoseSpecies(tipoFlor) {
+          return normalizeSpecies(tipoFlor) === "ROSAS";
+        }
+
+        function stemsPerCaja(isRose) {
+          return isRose ? 100 : 120;
+        }
+
+        function normalizeColorText(value) {
+          return String(value || "")
+            .trim()
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/\s+/g, " ");
+        }
+
+        // El color viene SOLO de la columna Color de los Excel originales.
+        function detectColorGroupFromFile(colorValue) {
+          var n = normalizeColorText(colorValue);
+          if (!n) return null;
+
+          var warmOrdered = [
+            "yellow",
+            "amarillo",
+            "orange",
+            "naranja",
+            "peach",
+            "melocoton",
+            "coral",
+            "red",
+            "rojo",
+          ];
+          var coldOrdered = [
+            "sky blue",
+            "skyblue",
+            "celeste",
+            "blue",
+            "azul",
+            "white",
+            "blanco",
+            "purple",
+            "morado",
+            "violeta",
+            "lilac",
+            "lila",
+            "pink",
+            "rosado",
+            "green",
+            "verde",
+          ];
+
+          for (var i = 0; i < warmOrdered.length; i++) {
+            if (n === warmOrdered[i] || n.indexOf(warmOrdered[i]) !== -1)
+              return "warm";
+          }
+          for (var j = 0; j < coldOrdered.length; j++) {
+            if (n === coldOrdered[j] || n.indexOf(coldOrdered[j]) !== -1)
+              return "cold";
+          }
+          return null;
+        }
+
+        function computePromoCatalog(allRows) {
+          // Usa los archivos originales: # cajas + columna Color.
+          // Stems = cajas * (100 si rosa / 120 si otra flor).
+          if (!allRows.length) return { items: [], error: null };
+          var sample = allRows[0] || {};
+          var cajasKey = findKey(sample, ["# cajas", "cajas"]);
+          var variedadKey = findKey(sample, ["variedad"]);
+          var tipoFlorKey = findKey(sample, ["tipo flor"]);
+          var colorKey = findKey(sample, [
+            "color",
+            "colour",
+            "colores",
+            "color flor",
+            "color de flor",
+          ]);
+          if (!cajasKey || !variedadKey || !tipoFlorKey) {
+            return {
+              items: [],
+              error:
+                "No se detectaron columnas Tipo flor / Variedad / # Cajas en los archivos originales.",
+            };
+          }
+          if (!colorKey) {
+            return {
+              items: [],
+              error:
+                "No se encontró la columna Color en los archivos originales. Sin ella no se pueden armar las cajas combo.",
+            };
+          }
+
+          var totals = new Map();
+          allRows.forEach(function (r) {
+            var variedad = String(
+              r[variedadKey] == null ? "" : r[variedadKey],
+            ).trim();
+            var tipoFlor = String(
+              r[tipoFlorKey] == null ? "" : r[tipoFlorKey],
+            ).trim();
+            var colorRaw = String(
+              r[colorKey] == null ? "" : r[colorKey],
+            ).trim();
+            if (!variedad) return;
+            var isRose = isRoseSpecies(tipoFlor);
+            var cajas = parseCajasRaw(r[cajasKey]);
+            if (cajas > 6) cajas = 6;
+            if (cajas < 0) cajas = 0;
+            var colorGroup = detectColorGroupFromFile(colorRaw);
+            var colorNorm = normalizeColorText(colorRaw) || "-";
+            var key =
+              normalizeSpecies(tipoFlor) +
+              "|" +
+              String(variedad).trim().toLowerCase() +
+              "|" +
+              colorNorm;
+            if (!totals.has(key)) {
+              totals.set(key, {
+                name: variedad,
+                tipoFlor: tipoFlor,
+                isRose: isRose,
+                color: colorRaw,
+                colorGroup: colorGroup,
+                cajas: 0,
+                stems: 0,
+              });
+            }
+            var item = totals.get(key);
+            item.cajas += cajas;
+            item.stems = item.cajas * stemsPerCaja(item.isRose);
+          });
+
+          return {
+            items: Array.from(totals.values()).sort(function (a, b) {
+              if (b.cajas !== a.cajas) return b.cajas - a.cajas;
+              if (b.stems !== a.stems) return b.stems - a.stems;
+              return a.name.localeCompare(b.name, "es", {
+                sensitivity: "base",
+              });
+            }),
+            error: null,
+          };
+        }
+
+        function pickPrimaryPool(items) {
+          var roses = items.filter(function (it) {
+            return it.isRose;
+          });
+          var others = items.filter(function (it) {
+            return !it.isRose;
+          });
+          return others.slice(0, 10).concat(roses.slice(0, 5));
+        }
+
+        function pickColorItems(items, colorGroup) {
+          // 1) top 10 no-rosas + top 5 rosas
+          // 2) si no hay >= 3 del color, ampliar a top 15 por # cajas
+          var primary = pickPrimaryPool(items).filter(function (it) {
+            return it.colorGroup === colorGroup;
+          });
+          if (primary.length >= MIN_COMBO_PRODUCTS) return primary;
+
+          return items.slice(0, 15).filter(function (it) {
+            return it.colorGroup === colorGroup;
+          });
+        }
+
+        function comboPackingForItems(items) {
+          // Empaque de TODA la caja combo (no por variedad).
+          // Si hay rosas -> 1 Q (100 stems). Si no -> 1 E (120 stems).
+          var hasRose = items.some(function (it) {
+            return it.isRose;
+          });
+          return hasRose
+            ? { code: "Q", targetStems: 100 }
+            : { code: "E", targetStems: 120 };
+        }
+
+        function roundDownToMultiple(value, multiple) {
+          if (multiple <= 0) return 0;
+          return Math.floor(value / multiple) * multiple;
+        }
+
+        function allocateComboStems(items, targetStems) {
+          // Proporcional a stems disponibles (derivados de # cajas).
+          // Rosas multiplos de 25; resto multiplos de 10.
+          // Todo cabe en 1 sola caja (targetStems = 100 Q u 120 E).
+          if (!items || items.length < MIN_COMBO_PRODUCTS) return [];
+          var totalAvail = items.reduce(function (s, it) {
+            return s + Math.max(0, it.stems);
+          }, 0);
+          if (totalAvail <= 0) return [];
+
+          var drafts = items.map(function (it) {
+            var multiple = it.isRose ? 25 : 10;
+            var ideal = (it.stems / totalAvail) * targetStems;
+            var stems = roundDownToMultiple(ideal, multiple);
+            if (stems <= 0 && it.stems > 0) stems = multiple;
+            return {
+              name: it.name,
+              isRose: it.isRose,
+              multiple: multiple,
+              ideal: ideal,
+              stems: stems,
+              remainder: ideal - stems,
+            };
+          });
+
+          var sum = drafts.reduce(function (s, d) {
+            return s + d.stems;
+          }, 0);
+          var safety = 0;
+          while (sum > targetStems && safety < 200) {
+            safety++;
+            var reducible = drafts
+              .filter(function (d) {
+                return d.stems >= d.multiple * 2;
+              })
+              .sort(function (a, b) {
+                return b.stems - a.stems;
+              });
+            if (!reducible.length) {
+              var any = drafts
+                .filter(function (d) {
+                  return d.stems >= d.multiple;
+                })
+                .sort(function (a, b) {
+                  return b.stems - a.stems;
+                });
+              if (!any.length) break;
+              any[0].stems -= any[0].multiple;
+              sum -= any[0].multiple;
+              continue;
+            }
+            reducible[0].stems -= reducible[0].multiple;
+            sum -= reducible[0].multiple;
+          }
+
+          var remaining = targetStems - sum;
+          safety = 0;
+          while (remaining > 0 && safety < 200) {
+            safety++;
+            var candidates = drafts
+              .filter(function (d) {
+                return d.multiple <= remaining;
+              })
+              .sort(function (a, b) {
+                if (b.remainder !== a.remainder) return b.remainder - a.remainder;
+                return b.ideal - a.ideal;
+              });
+            if (!candidates.length) break;
+            var pick = candidates[0];
+            pick.stems += pick.multiple;
+            pick.remainder -= pick.multiple;
+            remaining -= pick.multiple;
+          }
+
+          var result = drafts
+            .filter(function (d) {
+              return d.stems > 0;
+            })
+            .map(function (d) {
+              return {
+                name: d.name,
+                stems: d.stems,
+                isRose: d.isRose,
+              };
+            });
+
+          if (result.length < MIN_COMBO_PRODUCTS) return [];
+          return result;
+        }
+
+        function renderPromoTable(tableId, packBadgeId, combo) {
+          var table = document.getElementById(tableId);
+          var badge = document.getElementById(packBadgeId);
+          if (!table) return;
+          var tbody = table.querySelector("tbody");
+          if (!tbody) return;
+          tbody.innerHTML = "";
+
+          if (!combo || !combo.rows || !combo.rows.length) {
+            if (badge) badge.textContent = "Empaque caja: —";
+            var tr = document.createElement("tr");
+            var td = document.createElement("td");
+            td.colSpan = 2;
+            td.className = "empty-msg";
+            td.textContent =
+              combo && combo.message
+                ? combo.message
+                : "No hay suficientes variedades del mismo color (mín. 3) para armar la caja combo.";
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+          }
+
+          if (badge) {
+            badge.textContent =
+              "Empaque caja: " +
+              combo.packing +
+              " (" +
+              combo.targetStems +
+              " tallos)";
+          }
+
+          combo.rows.forEach(function (r) {
+            var tr2 = document.createElement("tr");
+            var tdName = document.createElement("td");
+            tdName.textContent = r.name;
+            var tdStems = document.createElement("td");
+            tdStems.textContent = String(r.stems);
+            tr2.appendChild(tdName);
+            tr2.appendChild(tdStems);
+            tbody.appendChild(tr2);
+          });
+        }
+
+        function buildColorCombo(items, colorGroup) {
+          var colorItems = pickColorItems(items, colorGroup);
+          if (colorItems.length < MIN_COMBO_PRODUCTS) {
+            return {
+              rows: [],
+              message:
+                "Se necesitan al menos 3 productos con color de la misma paleta en la columna Color de los archivos originales.",
+            };
+          }
+          var pack = comboPackingForItems(colorItems);
+          var rows = allocateComboStems(colorItems, pack.targetStems);
+          if (!rows.length) {
+            return {
+              rows: [],
+              message:
+                "No se pudo repartir tallos en 1 caja " +
+                pack.code +
+                " con al menos 3 productos.",
+            };
+          }
+          return {
+            rows: rows,
+            packing: pack.code,
+            targetStems: pack.targetStems,
+          };
+        }
+
+        function updatePromocionesFromRows(allRows) {
+          var catalog = computePromoCatalog(allRows);
+          lastPromoCandidates = catalog.items || [];
+          if (catalog.error) {
+            var errCombo = { rows: [], message: catalog.error };
+            renderPromoTable("promoWarmTable", "promoWarmPack", errCombo);
+            renderPromoTable("promoColdTable", "promoColdPack", errCombo);
+            return;
+          }
+          renderPromoTable(
+            "promoWarmTable",
+            "promoWarmPack",
+            buildColorCombo(catalog.items, "warm"),
+          );
+          renderPromoTable(
+            "promoColdTable",
+            "promoColdPack",
+            buildColorCombo(catalog.items, "cold"),
+          );
+        }
+
+        function resetPromocionesTables() {
+          lastPromoCandidates = [];
+          ["promoWarmPack", "promoColdPack"].forEach(function (id) {
+            var badge = document.getElementById(id);
+            if (badge) badge.textContent = "Empaque caja: —";
+          });
+          ["promoWarmTable", "promoColdTable"].forEach(function (id) {
+            var table = document.getElementById(id);
+            if (!table) return;
+            var tbody = table.querySelector("tbody");
+            if (!tbody) return;
+            tbody.innerHTML =
+              '<tr><td colspan="2" class="empty-msg">Procesa archivos en DISPONIBILIDAD para generar combos.</td></tr>';
+          });
+        }
+
+        function initTabs() {
+          var buttons = document.querySelectorAll(".main-tabs .tab-btn");
+          buttons.forEach(function (btn) {
+            btn.addEventListener("click", function () {
+              var tab = btn.getAttribute("data-tab");
+              buttons.forEach(function (b) {
+                var active = b === btn;
+                b.classList.toggle("active", active);
+                b.setAttribute("aria-selected", active ? "true" : "false");
+              });
+              document.querySelectorAll(".tab-panel").forEach(function (panel) {
+                panel.classList.toggle(
+                  "active",
+                  panel.id === "tab-" + tab,
+                );
+              });
+            });
+          });
+        }
+
+        initTabs();
 
         function normalizeSpecies(name) {
           return String(name || "").trim().toUpperCase();
@@ -899,6 +1805,7 @@
                   " filas (incluyendo títulos y separadores)";
                 excelWorkbook = buildWorkbook(processedRows);
                 resultSection.classList.add("visible");
+                updatePromocionesFromRows(allRows);
                 showMessage("Procesado correctamente.", "success");
               })
               .catch(function (err) {
@@ -955,6 +1862,7 @@
             excelWorkbook = null;
             document.getElementById("copyFeedback").textContent = "";
             clearMessage();
+            resetPromocionesTables();
             droppedFiles = [null, null, null, null, null];
             inputs.forEach(function (inp) {
               if (inp) inp.value = "";
@@ -963,6 +1871,81 @@
               updateName(i);
             });
           });
+
+        (function initNotes() {
+          var NOTES_KEY = "dispo-ag-notes";
+          var fab = document.getElementById("notesFab");
+          var panel = document.getElementById("notesPanel");
+          var closeBtn = document.getElementById("notesClose");
+          var listEl = document.getElementById("notesList");
+          var form = document.getElementById("notesForm");
+          var input = document.getElementById("notesInput");
+          if (!fab || !panel || !listEl || !form || !input) return;
+
+          function loadNotes() {
+            try {
+              var raw = localStorage.getItem(NOTES_KEY);
+              var parsed = raw ? JSON.parse(raw) : [];
+              return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              return [];
+            }
+          }
+
+          function saveNotes(notes) {
+            localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+          }
+
+          function renderNotes() {
+            var notes = loadNotes();
+            listEl.innerHTML = "";
+            if (!notes.length) {
+              var empty = document.createElement("li");
+              empty.className = "notes-empty";
+              empty.textContent = "Todavía no hay notas.";
+              listEl.appendChild(empty);
+              return;
+            }
+            notes.forEach(function (text) {
+              var li = document.createElement("li");
+              li.textContent = text;
+              listEl.appendChild(li);
+            });
+          }
+
+          function setPanelOpen(open) {
+            if (open) {
+              panel.classList.add("open");
+              panel.setAttribute("aria-hidden", "false");
+              renderNotes();
+              input.focus();
+            } else {
+              panel.classList.remove("open");
+              panel.setAttribute("aria-hidden", "true");
+            }
+          }
+
+          fab.addEventListener("click", function () {
+            setPanelOpen(!panel.classList.contains("open"));
+          });
+          if (closeBtn) {
+            closeBtn.addEventListener("click", function () {
+              setPanelOpen(false);
+            });
+          }
+          form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            var text = String(input.value || "").trim();
+            if (!text) return;
+            var notes = loadNotes();
+            notes.push(text);
+            saveNotes(notes);
+            input.value = "";
+            renderNotes();
+          });
+
+          renderNotes();
+        })();
       })();
     </script>
   </body>
