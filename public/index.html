@@ -34,7 +34,7 @@
         color: var(--text);
       }
       .shell {
-        max-width: 1100px;
+        max-width: 1280px;
         margin: 0 auto;
         padding: 2.5rem 1.25rem 3rem;
       }
@@ -47,8 +47,88 @@
         flex: 1;
         min-width: 0;
       }
+      .dispo-sidebar {
+        width: 360px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .prices-panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        min-height: 280px;
+        display: flex;
+        flex-direction: column;
+      }
+      .prices-panel .top-varieties-title {
+        margin-bottom: 0.65rem;
+      }
+      .prices-drop {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+        min-height: 180px;
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-sm);
+        padding: 1rem 0.75rem;
+        background: #fafbfc;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s,
+          box-shadow 0.2s;
+      }
+      .prices-drop:hover,
+      .prices-drop.dragover {
+        border-color: var(--border-focus);
+        background: #f1f3ff;
+        box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.12);
+      }
+      .prices-drop.has-file {
+        border-style: solid;
+        border-color: var(--success);
+        background: var(--success-bg);
+      }
+      .prices-drop input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .prices-drop .dz-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 0.25rem;
+      }
+      .prices-drop .dz-hint {
+        font-size: 0.75rem;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+      .prices-drop .dz-filename {
+        font-size: 0.75rem;
+        color: var(--accent);
+        word-break: break-all;
+        margin-top: 0.5rem;
+        min-height: 1.4em;
+      }
+      .prices-status {
+        margin-top: 0.65rem;
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.35;
+      }
       .top-varieties-panel {
-        width: 280px;
+        width: 100%;
         flex-shrink: 0;
         display: none;
         background: var(--card);
@@ -71,7 +151,7 @@
       }
       .top-varieties-box {
         width: 100%;
-        min-height: 240px;
+        min-height: 180px;
         font-size: 0.8rem;
         line-height: 1.5;
         border: 1px solid var(--border);
@@ -86,11 +166,11 @@
         border-color: var(--border-focus);
         box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.12);
       }
-      @media (max-width: 860px) {
+      @media (max-width: 960px) {
         .layout {
           flex-direction: column;
         }
-        .top-varieties-panel {
+        .dispo-sidebar {
           width: 100%;
         }
       }
@@ -442,8 +522,10 @@
         background: var(--accent-hover);
       }
 
+
       .main-tabs {
         display: flex;
+        flex-wrap: wrap;
         gap: 0;
         margin-bottom: 1.25rem;
         border-bottom: 2px solid var(--border);
@@ -452,196 +534,308 @@
         border: none;
         background: transparent;
         color: var(--muted);
-        font-size: 0.85rem;
+        font-size: 0.8rem;
         font-weight: 600;
-        letter-spacing: 0.04em;
+        letter-spacing: 0.03em;
         text-transform: uppercase;
-        padding: 0.7rem 1.15rem;
+        padding: 0.7rem 1rem;
         cursor: pointer;
         border-bottom: 2px solid transparent;
         margin-bottom: -2px;
         transition: color 0.15s, border-color 0.15s;
       }
-      .main-tabs .tab-btn:hover {
-        color: var(--text);
-      }
+      .main-tabs .tab-btn:hover { color: var(--text); }
       .main-tabs .tab-btn.active {
         color: var(--accent);
         border-bottom-color: var(--accent);
       }
-      .tab-panel {
-        display: none;
+      .tab-panel { display: none; }
+      .tab-panel.active { display: block; }
+
+      .tab-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.25rem 1.15rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,.04);
       }
-      .tab-panel.active {
-        display: block;
+      .tab-card h2 {
+        margin: 0 0 0.35rem 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .tab-card .tab-lead {
+        margin: 0 0 1rem 0;
+        color: var(--muted);
+        font-size: 0.85rem;
       }
 
-      .promo-layout {
-        display: flex;
-        gap: 1rem;
-        align-items: stretch;
-        min-height: 520px;
-      }
-      .promo-day {
-        width: 260px;
-        flex-shrink: 0;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 1rem;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-      }
-      .promo-day h3,
-      .promo-combos-card h3,
-      .promo-info h3 {
-        margin: 0 0 0.65rem 0;
-        font-size: 0.75rem;
-        font-weight: 600;
+      /* Promociones */
+      .promo-empty {
         color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
+        font-size: 0.875rem;
+        padding: 1rem 0;
       }
-      .promo-day textarea,
-      .promo-info textarea {
-        flex: 1;
-        width: 100%;
-        min-height: 280px;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-sm);
-        padding: 0.65rem 0.75rem;
-        font-size: 0.85rem;
-        line-height: 1.45;
-        resize: vertical;
-        background: #fafbfc;
-      }
-      .promo-main {
-        flex: 1;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
-      .promo-combos-card {
-        position: relative;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 1rem 1.15rem 1.15rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        flex: 1;
-      }
-      .promo-price-box {
-        position: absolute;
-        top: 0.85rem;
-        right: 1rem;
+      .promo-list { list-style: none; margin: 0; padding: 0; }
+      .promo-item {
         display: flex;
         align-items: center;
-        gap: 0.4rem;
-        background: #f8f9fc;
+        gap: 0.75rem;
+        padding: 0.7rem 0.85rem;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
-        padding: 0.35rem 0.55rem;
+        margin-bottom: 0.55rem;
+        background: #fafbfc;
       }
-      .promo-price-box label {
-        margin: 0;
-        font-size: 0.8rem;
+      .promo-item-rank {
+        width: 1.6rem;
+        height: 1.6rem;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .promo-item-info { flex: 1; min-width: 0; }
+      .promo-item-name {
         font-weight: 600;
-        color: var(--text);
-        white-space: nowrap;
+        font-size: 0.9rem;
+        word-break: break-word;
       }
-      .promo-price-box input {
-        width: 88px;
+      .promo-item-meta {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin-top: 0.15rem;
+      }
+      .promo-item-price {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-shrink: 0;
+      }
+      .promo-item-price label {
+        margin: 0;
+        font-size: 0.75rem;
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .promo-item-price input {
+        width: 96px;
         border: 1px solid var(--border);
         border-radius: 6px;
-        padding: 0.25rem 0.4rem;
+        padding: 0.3rem 0.45rem;
         font-size: 0.85rem;
       }
-      .promo-combos-title {
-        margin: 0 0 1rem 0 !important;
-        padding-right: 150px;
-        font-size: 0.9rem !important;
-        color: var(--text) !important;
-        text-transform: none !important;
-        letter-spacing: 0 !important;
+      .promo-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
       }
-      .promo-group {
-        margin-bottom: 1.15rem;
+
+      /* Calendario */
+      .cal-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 1rem;
       }
-      .promo-group:last-child {
-        margin-bottom: 0;
+      @media (max-width: 900px) {
+        .cal-layout { grid-template-columns: 1fr; }
       }
-      .promo-group-head {
+      .cal-nav {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 0.75rem;
-        margin-bottom: 0.5rem;
-        flex-wrap: wrap;
+        margin-bottom: 0.75rem;
+        gap: 0.5rem;
       }
-      .promo-group h4 {
+      .cal-nav h3 {
         margin: 0;
-        font-size: 0.8rem;
+        font-size: 1rem;
         font-weight: 600;
-        color: var(--text);
+        text-transform: capitalize;
       }
-      .promo-pack-badge {
-        font-size: 0.78rem;
-        font-weight: 600;
-        color: var(--accent);
-        background: #eef2ff;
-        border: 1px solid #d6defa;
-        border-radius: 999px;
-        padding: 0.2rem 0.65rem;
-        white-space: nowrap;
+      .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
       }
-      .promo-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.8rem;
-      }
-      .promo-table th,
-      .promo-table td {
-        border: 1px solid var(--border);
-        padding: 0.45rem 0.55rem;
-        text-align: left;
-      }
-      .promo-table th {
-        background: #f4f6fa;
+      .cal-dow {
+        text-align: center;
+        font-size: 0.7rem;
         font-weight: 600;
         color: var(--muted);
-        font-size: 0.72rem;
+        padding: 0.25rem 0;
         text-transform: uppercase;
-        letter-spacing: 0.03em;
       }
-      .promo-table .empty-msg {
-        color: var(--muted);
-        font-style: italic;
-      }
-      .promo-info {
-        background: var(--card);
+      .cal-day {
+        min-height: 64px;
         border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 1rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        border-radius: 8px;
+        padding: 0.25rem;
+        background: #fff;
+        cursor: pointer;
+        font-size: 0.75rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .cal-day:hover { border-color: var(--border-focus); }
+      .cal-day.other-month { opacity: 0.4; }
+      .cal-day.today {
+        box-shadow: inset 0 0 0 2px var(--accent);
+      }
+      .cal-day-num { font-weight: 600; font-size: 0.8rem; }
+      .cal-badges {
         display: flex;
         flex-direction: column;
+        gap: 2px;
+        margin-top: 2px;
       }
-      .promo-info textarea {
-        min-height: 110px;
+      .cal-badge {
+        font-size: 0.62rem;
+        line-height: 1.2;
+        border-radius: 4px;
+        padding: 1px 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #1a1d21;
+      }
+      .cal-badge.holiday { background: #ffe3e3; }
+      .cal-badge.event { background: #fff3bf; }
+      .cal-side h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      .cal-side .field {
+        margin-bottom: 0.65rem;
+      }
+      .cal-side label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+      }
+      .cal-side input,
+      .cal-side select,
+      .cal-side textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.4rem 0.5rem;
+        font-size: 0.85rem;
+      }
+      .cal-side textarea { min-height: 64px; resize: vertical; }
+      .vendor-swatch {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 0.35rem;
+        vertical-align: middle;
+        border: 1px solid rgba(0,0,0,.1);
+      }
+      .cal-list {
+        list-style: none;
+        margin: 0.5rem 0 0;
+        padding: 0;
+        max-height: 180px;
+        overflow: auto;
+        font-size: 0.78rem;
+      }
+      .cal-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.35rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .cal-list button {
+        border: none;
+        background: transparent;
+        color: #c92a2a;
+        cursor: pointer;
+        font-size: 0.75rem;
+      }
+
+      /* Turnos */
+      .turnos-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 1rem;
       }
       @media (max-width: 900px) {
-        .promo-layout {
-          flex-direction: column;
-        }
-        .promo-day {
-          width: 100%;
-        }
-        .promo-day textarea {
-          min-height: 140px;
-        }
+        .turnos-layout { grid-template-columns: 1fr; }
       }
+      .turnos-roster {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .turnos-roster li {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.55rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin-bottom: 0.4rem;
+        background: #fafbfc;
+        font-size: 0.85rem;
+      }
+      .turnos-roster .handle {
+        cursor: grab;
+        color: var(--muted);
+        user-select: none;
+      }
+      .turnos-roster .name { flex: 1; }
+      .turnos-saturday {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.45rem;
+      }
+      .sat-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.55rem 0.6rem;
+        font-size: 0.78rem;
+        background: #fff;
+      }
+      .sat-card.conflict {
+        border-color: #fa5252;
+        background: #fff5f5;
+      }
+      .sat-card .sat-date { font-weight: 600; margin-bottom: 0.2rem; }
+      .sat-card .sat-person {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        border-radius: 999px;
+        padding: 0.15rem 0.45rem;
+        font-weight: 600;
+      }
+      .sat-card .sat-alert {
+        margin-top: 0.3rem;
+        color: #c92a2a;
+        font-size: 0.7rem;
+      }
+      .btn-sm-soft {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: var(--radius-sm);
+        padding: 0.35rem 0.7rem;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
+      .btn-sm-soft:hover { background: #f1f3f5; }
+
     </style>
   </head>
   <body>
@@ -651,28 +845,14 @@
         <p>Consolidador de archivos Excel</p>
       </header>
 
+
       <nav class="main-tabs" role="tablist" aria-label="Secciones">
-        <button
-          type="button"
-          class="tab-btn active"
-          role="tab"
-          aria-selected="true"
-          data-tab="disponibilidad"
-          id="tabBtnDisponibilidad"
-        >
-          DISPONIBILIDAD
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          role="tab"
-          aria-selected="false"
-          data-tab="promociones"
-          id="tabBtnPromociones"
-        >
-          Promociones
-        </button>
+        <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="disponibilidad" id="tabBtnDisponibilidad">DISPONIBILIDAD</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="promociones" id="tabBtnPromociones">Promociones</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="calendario" id="tabBtnCalendario">Calendario</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="turnos" id="tabBtnTurnos">Turnos</button>
       </nav>
+
 
       <div
         class="tab-panel active"
@@ -785,105 +965,132 @@
         </section>
       </main>
 
-      <aside class="top-varieties-panel" id="topVarietiesPanel">
-        <div class="top-varieties-title">Flor que puede darse de baja</div>
-        <textarea
-          id="topVarietiesBox"
-          class="top-varieties-box"
-          readonly
-          rows="12"
-          placeholder="Procesa archivos para ver el listado"
-        ></textarea>
+      <aside class="dispo-sidebar">
+        <div class="prices-panel" id="pricesPanel">
+          <div class="top-varieties-title">Precios</div>
+          <label class="prices-drop" id="pricesDrop" for="pricesFile">
+            <input
+              type="file"
+              id="pricesFile"
+              accept=".xls,.xlsx,.csv"
+            />
+            <div class="dz-title">Archivo maestro de precios</div>
+            <div class="dz-hint">
+              Arrastra aquí o haz clic · solo variedades y precios
+            </div>
+            <div class="dz-filename" id="pricesFileName">&nbsp;</div>
+          </label>
+          <div class="prices-status" id="pricesStatus">
+            Sin archivo de precios cargado.
+          </div>
+        </div>
+        <div class="top-varieties-panel" id="topVarietiesPanel">
+          <div class="top-varieties-title">Flor que puede darse de baja</div>
+          <textarea
+            id="topVarietiesBox"
+            class="top-varieties-box"
+            readonly
+            rows="10"
+            placeholder="Procesa archivos para ver el listado"
+          ></textarea>
+        </div>
       </aside>
       </div>
       </div>
 
-      <div
-        class="tab-panel"
-        id="tab-promociones"
-        role="tabpanel"
-        aria-labelledby="tabBtnPromociones"
-      >
-        <div class="promo-layout">
-          <aside class="promo-day">
-            <h3>Promociones del día</h3>
-            <textarea
-              id="promoDayBox"
-              placeholder="Escribe aquí las promociones del día…"
-            ></textarea>
-          </aside>
-          <div class="promo-main">
-            <div class="promo-combos-card">
-              <div class="promo-price-box">
-                <label for="promoPrice">Precio:</label>
-                <input
-                  type="number"
-                  id="promoPrice"
-                  min="0"
-                  step="0.01"
-                  placeholder="0"
-                />
+      <div class="tab-panel" id="tab-promociones" role="tabpanel" aria-labelledby="tabBtnPromociones">
+        <div class="tab-card">
+          <h2>Promociones</h2>
+          <p class="tab-lead">Top 10 variedades con mayor cantidad (desde Disponibilidad). Asigna un precio a cada una.</p>
+          <div id="promoEmpty" class="promo-empty">Procesa archivos en DISPONIBILIDAD para cargar el Top 10.</div>
+          <ul class="promo-list" id="promoList" hidden></ul>
+          <div class="promo-actions" id="promoActions" hidden>
+            <button type="button" class="btn btn-primary btn-sm" id="promoSaveBtn">Guardar precios</button>
+            <button type="button" class="btn btn-outline btn-secondary btn-sm" id="promoExportBtn">Exportar lista</button>
+            <span class="feedback" id="promoFeedback"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-calendario" role="tabpanel" aria-labelledby="tabBtnCalendario">
+        <div class="tab-card">
+          <h2>Calendario</h2>
+          <p class="tab-lead">Eventos, feriados y vacaciones por vendedora.</p>
+          <div class="cal-layout">
+            <div>
+              <div class="cal-nav">
+                <button type="button" class="btn-sm-soft" id="calPrev">←</button>
+                <h3 id="calMonthLabel">—</h3>
+                <button type="button" class="btn-sm-soft" id="calNext">→</button>
               </div>
-              <h3 class="promo-combos-title">Cajas combo promocionales</h3>
-              <div class="promo-group">
-                <div class="promo-group-head">
-                  <h4>Colores cálidos (yellow, red, orange, peach, coral)</h4>
-                  <span class="promo-pack-badge" id="promoWarmPack"
-                    >Empaque caja: —</span
-                  >
-                </div>
-                <table class="promo-table" id="promoWarmTable">
-                  <thead>
-                    <tr>
-                      <th>Variedad</th>
-                      <th>Tallos</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="2" class="empty-msg">
-                        Procesa archivos en DISPONIBILIDAD para generar combos.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div class="promo-group">
-                <div class="promo-group-head">
-                  <h4>
-                    Colores fríos (blue, white, purple, pink, green, sky blue)
-                  </h4>
-                  <span class="promo-pack-badge" id="promoColdPack"
-                    >Empaque caja: —</span
-                  >
-                </div>
-                <table class="promo-table" id="promoColdTable">
-                  <thead>
-                    <tr>
-                      <th>Variedad</th>
-                      <th>Tallos</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="2" class="empty-msg">
-                        Procesa archivos en DISPONIBILIDAD para generar combos.
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <div class="cal-grid" id="calGrid"></div>
             </div>
-            <div class="promo-info">
-              <h3>Información</h3>
-              <textarea
-                id="promoInfoBox"
-                placeholder="Información adicional…"
-              ></textarea>
+            <aside class="cal-side">
+              <h3>Día seleccionado</h3>
+              <div class="field">
+                <label for="calSelectedDate">Fecha</label>
+                <input type="date" id="calSelectedDate" />
+              </div>
+              <div class="field">
+                <label for="calEntryType">Tipo</label>
+                <select id="calEntryType">
+                  <option value="holiday">Feriado</option>
+                  <option value="event">Evento</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="calEntryTitle">Título</label>
+                <input type="text" id="calEntryTitle" placeholder="Ej. Evento de prueba" maxlength="120" />
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" id="calAddEntryBtn">Añadir</button>
+              <ul class="cal-list" id="calDayEntries"></ul>
+
+              <hr style="margin:1rem 0;border:0;border-top:1px solid var(--border)" />
+              <h3>Vacaciones por vendedora</h3>
+              <div class="field">
+                <label for="vacVendor">Vendedora</label>
+                <select id="vacVendor"></select>
+              </div>
+              <div class="field">
+                <label for="vacFrom">Desde</label>
+                <input type="date" id="vacFrom" />
+              </div>
+              <div class="field">
+                <label for="vacTo">Hasta</label>
+                <input type="date" id="vacTo" />
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" id="vacAddBtn">Registrar vacaciones</button>
+              <ul class="cal-list" id="vacList"></ul>
+            </aside>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-turnos" role="tabpanel" aria-labelledby="tabBtnTurnos">
+        <div class="tab-card">
+          <h2>Turnos de vendedoras</h2>
+          <p class="tab-lead">Rotación automática de sábados. Si hay vacaciones, se salta al siguiente y se marca alerta.</p>
+          <div class="turnos-layout">
+            <div>
+              <h3 style="font-size:0.8rem;text-transform:uppercase;color:var(--muted);margin:0 0 0.5rem">Orden de rotación</h3>
+              <ul class="turnos-roster" id="turnosRoster"></ul>
+              <div style="display:flex;gap:0.4rem;margin-top:0.5rem;flex-wrap:wrap">
+                <input type="text" id="turnosNewName" placeholder="Nueva integrante" style="flex:1;min-width:120px;border:1px solid var(--border);border-radius:6px;padding:0.35rem 0.5rem;font-size:0.85rem" />
+                <button type="button" class="btn-sm-soft" id="turnosAddBtn">Añadir</button>
+              </div>
+              <div class="field" style="margin-top:0.75rem">
+                <label for="turnosYear" style="font-size:0.78rem;font-weight:600">Año</label>
+                <input type="number" id="turnosYear" min="2000" max="2100" style="width:100%;border:1px solid var(--border);border-radius:6px;padding:0.35rem 0.5rem" />
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" id="turnosRebuildBtn" style="margin-top:0.5rem">Recalcular turnos</button>
+            </div>
+            <div>
+              <div class="turnos-saturday" id="turnosSaturdays"></div>
             </div>
           </div>
         </div>
       </div>
+
     </div>
 
     <div class="notes-panel" id="notesPanel" aria-hidden="true">
@@ -963,8 +1170,6 @@
         var excelWorkbook = null;
         var finalHeaders = ["# Cajas", "Grado", "Largo", "Variedad"];
         var droppedFiles = [null, null, null, null, null];
-        var lastPromoCandidates = [];
-        var MIN_COMBO_PRODUCTS = 3;
 
         function showMessage(text, type) {
           messageArea.innerHTML =
@@ -1156,386 +1361,898 @@
             .join("\n");
         }
 
-        function isRoseSpecies(tipoFlor) {
-          return normalizeSpecies(tipoFlor) === "ROSAS";
+
+        // ——— Maestro de precios (panel Precios) ———
+        var priceMaster = []; // [{ name, price }]
+        var pricesFileObj = null;
+        var COLOR_TOKENS = [
+          "sky blue",
+          "light pink",
+          "light blue",
+          "hot pink",
+          "dark pink",
+          "dark red",
+          "soft pink",
+          "cream",
+          "peach",
+          "coral",
+          "orange",
+          "yellow",
+          "white",
+          "ivory",
+          "purple",
+          "lavender",
+          "lilac",
+          "violet",
+          "magenta",
+          "burgundy",
+          "maroon",
+          "green",
+          "lime",
+          "blue",
+          "pink",
+          "red",
+          "rosa",
+          "blanco",
+          "amarillo",
+          "naranja",
+          "rojo",
+          "azul",
+          "morado",
+          "violeta",
+          "verde",
+          "crema",
+          "melocoton",
+          "salmon",
+          "fucsia",
+          "lavanda",
+        ];
+
+        function parsePriceValue(raw) {
+          var s = String(raw == null ? "" : raw).trim();
+          if (!s) return null;
+          var hasDollar = /\$/.test(s);
+          s = s.replace(/\$/g, "").replace(/\s/g, "");
+          if (!s) return null;
+          if (/\d+\.\d{3},\d+/.test(s)) {
+            s = s.replace(/\./g, "").replace(",", ".");
+          } else if (s.indexOf(",") !== -1 && s.indexOf(".") === -1) {
+            s = s.replace(",", ".");
+          }
+          if (!/^-?\d+(\.\d+)?$/.test(s)) return null;
+          var n = parseFloat(s);
+          return isNaN(n) ? null : n;
         }
 
-        function stemsPerCaja(isRose) {
-          return isRose ? 100 : 120;
+        function formatPriceOut(n) {
+          if (n == null || n === "" || isNaN(n)) return "";
+          return String(Math.round(n * 1000) / 1000);
         }
 
-        function normalizeColorText(value) {
-          return String(value || "")
+        function normalizeVarietyKey(name) {
+          return String(name || "")
             .trim()
+            .replace(/\s+/g, " ")
             .toLowerCase()
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/\s+/g, " ");
+            .replace(/[\u0300-\u036f]/g, "");
         }
 
-        // El color viene SOLO de la columna Color de los Excel originales.
-        function detectColorGroupFromFile(colorValue) {
-          var n = normalizeColorText(colorValue);
-          if (!n) return null;
+        function stripShortLetterSuffix(name) {
+          return String(name || "").replace(/\s+[a-z]{1,2}$/i, "").trim();
+        }
 
-          var warmOrdered = [
-            "yellow",
-            "amarillo",
-            "orange",
-            "naranja",
-            "peach",
-            "melocoton",
-            "coral",
-            "red",
-            "rojo",
-          ];
-          var coldOrdered = [
-            "sky blue",
-            "skyblue",
-            "celeste",
-            "blue",
-            "azul",
-            "white",
-            "blanco",
-            "purple",
-            "morado",
-            "violeta",
-            "lilac",
-            "lila",
-            "pink",
-            "rosado",
-            "green",
-            "verde",
-          ];
+        function extractColorTokens(name) {
+          var n = normalizeVarietyKey(name);
+          var found = [];
+          COLOR_TOKENS.forEach(function (tok) {
+            var t = normalizeVarietyKey(tok);
+            if (!t) return;
+            var re = new RegExp(
+              "(^|[^a-z])" + t.replace(/\s+/g, "\\s+") + "([^a-z]|$)",
+            );
+            if (re.test(n)) found.push(t);
+          });
+          return found.filter(function (t, i, arr) {
+            return arr.indexOf(t) === i;
+          });
+        }
 
-          for (var i = 0; i < warmOrdered.length; i++) {
-            if (n === warmOrdered[i] || n.indexOf(warmOrdered[i]) !== -1)
-              return "warm";
+        function colorsCompatible(aName, bName) {
+          var a = extractColorTokens(aName).slice().sort();
+          var b = extractColorTokens(bName).slice().sort();
+          if (!a.length && !b.length) return true;
+          if (a.length !== b.length) return false;
+          for (var i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return false;
           }
-          for (var j = 0; j < coldOrdered.length; j++) {
-            if (n === coldOrdered[j] || n.indexOf(coldOrdered[j]) !== -1)
-              return "cold";
-          }
+          return true;
+        }
+
+        function detectPriceColumn(sample, keys) {
+          var byName = findKey(sample, [
+            "price",
+            "precio",
+            "prices",
+            "precios",
+            "precio usd",
+            "price usd",
+            "unit price",
+            "pvp",
+          ]);
+          if (byName) return byName;
+
+          var dollarKey = null;
+          var numericCandidates = [];
+          keys.forEach(function (k) {
+            var val = sample[k];
+            var s = String(val == null ? "" : val);
+            if (/\$/.test(s)) dollarKey = k;
+            var p = parsePriceValue(s);
+            if (p != null) numericCandidates.push(k);
+          });
+          if (dollarKey) return dollarKey;
+
+          var decimalKeys = numericCandidates.filter(function (k) {
+            var p = parsePriceValue(sample[k]);
+            return p != null && Math.abs(p) !== Math.floor(Math.abs(p));
+          });
+          if (decimalKeys.length === 1) return decimalKeys[0];
+          if (numericCandidates.length === 1) return numericCandidates[0];
           return null;
         }
 
-        function computePromoCatalog(allRows) {
-          // Usa los archivos originales: # cajas + columna Color.
-          // Stems = cajas * (100 si rosa / 120 si otra flor).
-          if (!allRows.length) return { items: [], error: null };
+        function buildPriceMasterFromRows(rows) {
+          if (!rows || !rows.length) return [];
+          var sample = rows[0] || {};
+          var keys = Object.keys(sample);
+          var varKey =
+            findKey(sample, [
+              "variedad",
+              "variety",
+              "nombre",
+              "name",
+              "product",
+              "producto",
+              "flor",
+              "descripcion",
+              "description",
+            ]) || keys[0];
+          var priceKey = detectPriceColumn(sample, keys);
+          if (!priceKey) {
+            for (var i = 0; i < Math.min(rows.length, 30); i++) {
+              var r = rows[i];
+              for (var j = 0; j < keys.length; j++) {
+                var k = keys[j];
+                if (k === varKey) continue;
+                var s = String(r[k] == null ? "" : r[k]);
+                if (/\$/.test(s) || parsePriceValue(s) != null) {
+                  priceKey = k;
+                  break;
+                }
+              }
+              if (priceKey) break;
+            }
+          }
+          if (!varKey || !priceKey) return [];
+
+          var out = [];
+          rows.forEach(function (r) {
+            var name = String(r[varKey] == null ? "" : r[varKey]).trim();
+            if (!name) return;
+            var price = parsePriceValue(r[priceKey]);
+            if (price == null) return;
+            out.push({ name: name, price: price });
+          });
+          return out;
+        }
+
+        function lookupPriceForVariety(variedad) {
+          if (!priceMaster.length || !variedad) return "";
+          var target = normalizeVarietyKey(variedad);
+          var targetStripped = normalizeVarietyKey(
+            stripShortLetterSuffix(variedad),
+          );
+
+          function tryMatch(candidateName) {
+            if (!colorsCompatible(variedad, candidateName)) return false;
+            var c = normalizeVarietyKey(candidateName);
+            var cStrip = normalizeVarietyKey(
+              stripShortLetterSuffix(candidateName),
+            );
+            if (c === target) return true;
+            if (c === targetStripped) return true;
+            if (cStrip === target) return true;
+            if (cStrip === targetStripped) return true;
+            return false;
+          }
+
+          for (var i = 0; i < priceMaster.length; i++) {
+            if (tryMatch(priceMaster[i].name)) {
+              return formatPriceOut(priceMaster[i].price);
+            }
+          }
+          return "";
+        }
+
+        function applyPricesToRows(rows) {
+          if (!rows || !rows.length) return rows;
+          rows.forEach(function (r) {
+            if (r.isTitle || r.isSeparator) {
+              r.precio = "";
+              return;
+            }
+            r.precio = lookupPriceForVariety(r.variedad);
+          });
+          return rows;
+        }
+
+        function updatePricesUI(file, count, err) {
+          var drop = document.getElementById("pricesDrop");
+          var nameEl = document.getElementById("pricesFileName");
+          var status = document.getElementById("pricesStatus");
+          if (nameEl) nameEl.textContent = file ? file.name : " ";
+          if (drop) {
+            if (file) drop.classList.add("has-file");
+            else drop.classList.remove("has-file");
+          }
+          if (status) {
+            if (err) status.textContent = err;
+            else if (!file)
+              status.textContent = "Sin archivo de precios cargado.";
+            else
+              status.textContent =
+                count +
+                " variedad" +
+                (count === 1 ? "" : "es") +
+                " con precio cargada" +
+                (count === 1 ? "" : "s") +
+                ".";
+          }
+        }
+
+        function loadPricesFile(file) {
+          if (!file) return;
+          pricesFileObj = file;
+          readSheetFromFile(file)
+            .then(function (rows) {
+              priceMaster = buildPriceMasterFromRows(rows);
+              if (!priceMaster.length) {
+                updatePricesUI(
+                  file,
+                  0,
+                  "No se detectaron variedades/precios. Usa columnas Variedad y Precio/Price (o valores con $).",
+                );
+                return;
+              }
+              updatePricesUI(file, priceMaster.length);
+              AppState.priceMaster = priceMaster;
+            })
+            .catch(function (err) {
+              priceMaster = [];
+              updatePricesUI(
+                file,
+                0,
+                "Error al leer el archivo de precios: " + err.message,
+              );
+            });
+        }
+
+        (function initPricesPanel() {
+          var input = document.getElementById("pricesFile");
+          var drop = document.getElementById("pricesDrop");
+          if (!input || !drop) return;
+          input.addEventListener("change", function () {
+            var f = input.files && input.files[0];
+            if (f) loadPricesFile(f);
+          });
+          drop.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            drop.classList.add("dragover");
+          });
+          drop.addEventListener("dragleave", function (e) {
+            e.preventDefault();
+            drop.classList.remove("dragover");
+          });
+          drop.addEventListener("drop", function (e) {
+            e.preventDefault();
+            drop.classList.remove("dragover");
+            var f =
+              e.dataTransfer &&
+              e.dataTransfer.files &&
+              e.dataTransfer.files[0];
+            if (!f) return;
+            if (
+              !/\.xls$/i.test(f.name) &&
+              !/\.xlsx$/i.test(f.name) &&
+              !/\.csv$/i.test(f.name)
+            )
+              return;
+            try {
+              var dt = new DataTransfer();
+              dt.items.add(f);
+              input.files = dt.files;
+            } catch (err) {}
+            loadPricesFile(f);
+          });
+        })();
+
+
+        // ——— Estado global (alimenta Promociones / reportes) ———
+        var AppState = {
+          rawRows: [],
+          processedRows: [],
+          topVarieties: [],
+          top10: [],
+          promoPrices: {},
+          priceMaster: [],
+          tsv: "",
+          updatedAt: null,
+        };
+
+        var STORAGE_KEYS = {
+          promoPrices: "dispo-ag-promo-prices",
+          calendar: "dispo-ag-calendar",
+          vacations: "dispo-ag-vacations",
+          roster: "dispo-ag-roster",
+        };
+
+        var DEFAULT_VENDORS = [
+          { name: "Paz", color: "#f8c8dc" },
+          { name: "María Fernanda", color: "#a8d4f0" },
+          { name: "Gaby", color: "#c3f0c8" },
+          { name: "Alex", color: "#ffe0a3" },
+          { name: "Lore", color: "#d4c1ff" },
+          { name: "Dianita", color: "#ffd6c9" },
+          { name: "Silvia", color: "#b8efe8" },
+          { name: "Angie", color: "#f5c6e0" },
+          { name: "Tania", color: "#c9d8ff" },
+        ];
+
+        function loadJSON(key, fallback) {
+          try {
+            var raw = localStorage.getItem(key);
+            if (!raw) return fallback;
+            return JSON.parse(raw);
+          } catch (e) {
+            return fallback;
+          }
+        }
+        function saveJSON(key, value) {
+          localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function computeTopN(allRows, n) {
+          if (!allRows.length) return [];
           var sample = allRows[0] || {};
           var cajasKey = findKey(sample, ["# cajas", "cajas"]);
           var variedadKey = findKey(sample, ["variedad"]);
-          var tipoFlorKey = findKey(sample, ["tipo flor"]);
-          var colorKey = findKey(sample, [
-            "color",
-            "colour",
-            "colores",
-            "color flor",
-            "color de flor",
-          ]);
-          if (!cajasKey || !variedadKey || !tipoFlorKey) {
-            return {
-              items: [],
-              error:
-                "No se detectaron columnas Tipo flor / Variedad / # Cajas en los archivos originales.",
-            };
-          }
-          if (!colorKey) {
-            return {
-              items: [],
-              error:
-                "No se encontró la columna Color en los archivos originales. Sin ella no se pueden armar las cajas combo.",
-            };
-          }
-
+          if (!cajasKey || !variedadKey) return [];
           var totals = new Map();
           allRows.forEach(function (r) {
-            var variedad = String(
-              r[variedadKey] == null ? "" : r[variedadKey],
-            ).trim();
-            var tipoFlor = String(
-              r[tipoFlorKey] == null ? "" : r[tipoFlorKey],
-            ).trim();
-            var colorRaw = String(
-              r[colorKey] == null ? "" : r[colorKey],
-            ).trim();
+            var variedad = String(r[variedadKey] == null ? "" : r[variedadKey]).trim();
             if (!variedad) return;
-            var isRose = isRoseSpecies(tipoFlor);
+            var key = variedad.toLowerCase();
             var cajas = parseCajasRaw(r[cajasKey]);
-            if (cajas > 6) cajas = 6;
-            if (cajas < 0) cajas = 0;
-            var colorGroup = detectColorGroupFromFile(colorRaw);
-            var colorNorm = normalizeColorText(colorRaw) || "-";
-            var key =
-              normalizeSpecies(tipoFlor) +
-              "|" +
-              String(variedad).trim().toLowerCase() +
-              "|" +
-              colorNorm;
-            if (!totals.has(key)) {
-              totals.set(key, {
-                name: variedad,
-                tipoFlor: tipoFlor,
-                isRose: isRose,
-                color: colorRaw,
-                colorGroup: colorGroup,
-                cajas: 0,
-                stems: 0,
-              });
-            }
-            var item = totals.get(key);
-            item.cajas += cajas;
-            item.stems = item.cajas * stemsPerCaja(item.isRose);
+            if (!totals.has(key)) totals.set(key, { name: variedad, total: 0 });
+            totals.get(key).total += cajas;
           });
-
-          return {
-            items: Array.from(totals.values()).sort(function (a, b) {
-              if (b.cajas !== a.cajas) return b.cajas - a.cajas;
-              if (b.stems !== a.stems) return b.stems - a.stems;
-              return a.name.localeCompare(b.name, "es", {
-                sensitivity: "base",
-              });
-            }),
-            error: null,
-          };
-        }
-
-        function pickPrimaryPool(items) {
-          var roses = items.filter(function (it) {
-            return it.isRose;
-          });
-          var others = items.filter(function (it) {
-            return !it.isRose;
-          });
-          return others.slice(0, 10).concat(roses.slice(0, 5));
-        }
-
-        function pickColorItems(items, colorGroup) {
-          // 1) top 10 no-rosas + top 5 rosas
-          // 2) si no hay >= 3 del color, ampliar a top 15 por # cajas
-          var primary = pickPrimaryPool(items).filter(function (it) {
-            return it.colorGroup === colorGroup;
-          });
-          if (primary.length >= MIN_COMBO_PRODUCTS) return primary;
-
-          return items.slice(0, 15).filter(function (it) {
-            return it.colorGroup === colorGroup;
-          });
-        }
-
-        function comboPackingForItems(items) {
-          // Empaque de TODA la caja combo (no por variedad).
-          // Si hay rosas -> 1 Q (100 stems). Si no -> 1 E (120 stems).
-          var hasRose = items.some(function (it) {
-            return it.isRose;
-          });
-          return hasRose
-            ? { code: "Q", targetStems: 100 }
-            : { code: "E", targetStems: 120 };
-        }
-
-        function roundDownToMultiple(value, multiple) {
-          if (multiple <= 0) return 0;
-          return Math.floor(value / multiple) * multiple;
-        }
-
-        function allocateComboStems(items, targetStems) {
-          // Proporcional a stems disponibles (derivados de # cajas).
-          // Rosas multiplos de 25; resto multiplos de 10.
-          // Todo cabe en 1 sola caja (targetStems = 100 Q u 120 E).
-          if (!items || items.length < MIN_COMBO_PRODUCTS) return [];
-          var totalAvail = items.reduce(function (s, it) {
-            return s + Math.max(0, it.stems);
-          }, 0);
-          if (totalAvail <= 0) return [];
-
-          var drafts = items.map(function (it) {
-            var multiple = it.isRose ? 25 : 10;
-            var ideal = (it.stems / totalAvail) * targetStems;
-            var stems = roundDownToMultiple(ideal, multiple);
-            if (stems <= 0 && it.stems > 0) stems = multiple;
-            return {
-              name: it.name,
-              isRose: it.isRose,
-              multiple: multiple,
-              ideal: ideal,
-              stems: stems,
-              remainder: ideal - stems,
-            };
-          });
-
-          var sum = drafts.reduce(function (s, d) {
-            return s + d.stems;
-          }, 0);
-          var safety = 0;
-          while (sum > targetStems && safety < 200) {
-            safety++;
-            var reducible = drafts
-              .filter(function (d) {
-                return d.stems >= d.multiple * 2;
-              })
-              .sort(function (a, b) {
-                return b.stems - a.stems;
-              });
-            if (!reducible.length) {
-              var any = drafts
-                .filter(function (d) {
-                  return d.stems >= d.multiple;
-                })
-                .sort(function (a, b) {
-                  return b.stems - a.stems;
-                });
-              if (!any.length) break;
-              any[0].stems -= any[0].multiple;
-              sum -= any[0].multiple;
-              continue;
-            }
-            reducible[0].stems -= reducible[0].multiple;
-            sum -= reducible[0].multiple;
-          }
-
-          var remaining = targetStems - sum;
-          safety = 0;
-          while (remaining > 0 && safety < 200) {
-            safety++;
-            var candidates = drafts
-              .filter(function (d) {
-                return d.multiple <= remaining;
-              })
-              .sort(function (a, b) {
-                if (b.remainder !== a.remainder) return b.remainder - a.remainder;
-                return b.ideal - a.ideal;
-              });
-            if (!candidates.length) break;
-            var pick = candidates[0];
-            pick.stems += pick.multiple;
-            pick.remainder -= pick.multiple;
-            remaining -= pick.multiple;
-          }
-
-          var result = drafts
-            .filter(function (d) {
-              return d.stems > 0;
+          return Array.from(totals.values())
+            .sort(function (a, b) {
+              if (b.total !== a.total) return b.total - a.total;
+              return a.name.localeCompare(b.name, "es", { sensitivity: "base" });
             })
-            .map(function (d) {
-              return {
-                name: d.name,
-                stems: d.stems,
-                isRose: d.isRose,
-              };
+            .slice(0, n);
+        }
+
+        function syncAppStateFromProcess(allRows, processedRows, tsv) {
+          var prices = loadJSON(STORAGE_KEYS.promoPrices, {});
+          AppState.rawRows = allRows;
+          AppState.processedRows = processedRows;
+          AppState.topVarieties = computeTopN(allRows, 5);
+          AppState.top10 = computeTopN(allRows, 10);
+          AppState.promoPrices = prices;
+          AppState.priceMaster = priceMaster;
+          AppState.tsv = tsv;
+          AppState.updatedAt = new Date().toISOString();
+          renderPromociones();
+        }
+
+        function clearAppStateProcessed() {
+          AppState.rawRows = [];
+          AppState.processedRows = [];
+          AppState.topVarieties = [];
+          AppState.top10 = [];
+          AppState.tsv = "";
+          AppState.updatedAt = null;
+          renderPromociones();
+        }
+
+        // ——— Promociones ———
+        function renderPromociones() {
+          var empty = document.getElementById("promoEmpty");
+          var list = document.getElementById("promoList");
+          var actions = document.getElementById("promoActions");
+          if (!empty || !list || !actions) return;
+          list.innerHTML = "";
+          if (!AppState.top10.length) {
+            empty.hidden = false;
+            list.hidden = true;
+            actions.hidden = true;
+            return;
+          }
+          empty.hidden = true;
+          list.hidden = false;
+          actions.hidden = false;
+          AppState.top10.forEach(function (item, i) {
+            var key = item.name.toLowerCase();
+            var price = AppState.promoPrices[key];
+            if (price == null) price = "";
+            var li = document.createElement("li");
+            li.className = "promo-item";
+            li.innerHTML =
+              '<div class="promo-item-rank">' + (i + 1) + "</div>" +
+              '<div class="promo-item-info">' +
+              '<div class="promo-item-name"></div>' +
+              '<div class="promo-item-meta"></div>' +
+              "</div>" +
+              '<div class="promo-item-price">' +
+              "<label>Precio</label>" +
+              '<input type="number" min="0" step="0.01" data-promo-key="' +
+              key.replace(/"/g, "&quot;") +
+              '" />' +
+              "</div>";
+            li.querySelector(".promo-item-name").textContent = item.name;
+            li.querySelector(".promo-item-meta").textContent =
+              item.total + " cajas disponibles / bajas";
+            var inp = li.querySelector("input");
+            inp.value = price;
+            inp.addEventListener("change", function () {
+              AppState.promoPrices[key] = inp.value === "" ? "" : Number(inp.value);
+            });
+            list.appendChild(li);
+          });
+        }
+
+        function initPromociones() {
+          var saveBtn = document.getElementById("promoSaveBtn");
+          var exportBtn = document.getElementById("promoExportBtn");
+          var feedback = document.getElementById("promoFeedback");
+          if (saveBtn) {
+            saveBtn.addEventListener("click", function () {
+              document.querySelectorAll("#promoList input[data-promo-key]").forEach(function (inp) {
+                var k = inp.getAttribute("data-promo-key");
+                AppState.promoPrices[k] = inp.value === "" ? "" : Number(inp.value);
+              });
+              saveJSON(STORAGE_KEYS.promoPrices, AppState.promoPrices);
+              if (feedback) {
+                feedback.textContent = "Guardado";
+                setTimeout(function () { feedback.textContent = ""; }, 1600);
+              }
+            });
+          }
+          if (exportBtn) {
+            exportBtn.addEventListener("click", function () {
+              if (!AppState.top10.length) return;
+              var lines = ["#\tVariedad\tCajas\tPrecio"];
+              AppState.top10.forEach(function (item, i) {
+                var key = item.name.toLowerCase();
+                var price = AppState.promoPrices[key];
+                if (price == null) price = "";
+                lines.push([i + 1, item.name, item.total, price].join("\t"));
+              });
+              var blob = new Blob([lines.join("\n")], { type: "text/tab-separated-values;charset=utf-8" });
+              var a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = "promociones_top10.tsv";
+              a.click();
+              URL.revokeObjectURL(a.href);
+            });
+          }
+          AppState.promoPrices = loadJSON(STORAGE_KEYS.promoPrices, {});
+          renderPromociones();
+        }
+
+        // ——— Calendario ———
+        var calView = { year: new Date().getFullYear(), month: new Date().getMonth() };
+        var calSelected = null;
+
+        function ymd(d) {
+          var dd = String(d.getDate()).padStart(2, "0");
+          var mm = String(d.getMonth() + 1).padStart(2, "0");
+          return d.getFullYear() + "-" + mm + "-" + dd;
+        }
+        function parseYmd(s) {
+          var p = String(s || "").split("-");
+          if (p.length !== 3) return null;
+          return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+        }
+        function eachDate(fromStr, toStr, fn) {
+          var a = parseYmd(fromStr);
+          var b = parseYmd(toStr);
+          if (!a || !b) return;
+          if (b < a) { var t = a; a = b; b = t; }
+          var cur = new Date(a.getTime());
+          while (cur <= b) {
+            fn(ymd(cur));
+            cur.setDate(cur.getDate() + 1);
+          }
+        }
+
+        function getCalendarEntries() {
+          return loadJSON(STORAGE_KEYS.calendar, []);
+        }
+        function setCalendarEntries(list) {
+          saveJSON(STORAGE_KEYS.calendar, list);
+        }
+        function getVacations() {
+          return loadJSON(STORAGE_KEYS.vacations, []);
+        }
+        function setVacations(list) {
+          saveJSON(STORAGE_KEYS.vacations, list);
+        }
+        function getRoster() {
+          var r = loadJSON(STORAGE_KEYS.roster, null);
+          if (!r || !r.length) return DEFAULT_VENDORS.slice();
+          return r;
+        }
+        function setRoster(list) {
+          saveJSON(STORAGE_KEYS.roster, list);
+        }
+        function vendorColor(name) {
+          var found = getRoster().find(function (v) { return v.name === name; });
+          if (found) return found.color;
+          var def = DEFAULT_VENDORS.find(function (v) { return v.name === name; });
+          return def ? def.color : "#dee2e6";
+        }
+
+        function renderVendorSelect() {
+          var sel = document.getElementById("vacVendor");
+          if (!sel) return;
+          var roster = getRoster();
+          sel.innerHTML = "";
+          roster.forEach(function (v) {
+            var opt = document.createElement("option");
+            opt.value = v.name;
+            opt.textContent = v.name;
+            sel.appendChild(opt);
+          });
+        }
+
+        function renderCalendar() {
+          var grid = document.getElementById("calGrid");
+          var label = document.getElementById("calMonthLabel");
+          if (!grid || !label) return;
+          var year = calView.year;
+          var month = calView.month;
+          label.textContent = new Date(year, month, 1).toLocaleDateString("es", {
+            month: "long",
+            year: "numeric",
+          });
+          grid.innerHTML = "";
+          ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].forEach(function (d) {
+            var el = document.createElement("div");
+            el.className = "cal-dow";
+            el.textContent = d;
+            grid.appendChild(el);
+          });
+
+          var first = new Date(year, month, 1);
+          var startPad = (first.getDay() + 6) % 7; // Monday-first
+          var start = new Date(year, month, 1 - startPad);
+          var todayStr = ymd(new Date());
+          var entries = getCalendarEntries();
+          var vacations = getVacations();
+
+          for (var i = 0; i < 42; i++) {
+            var day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+            var key = ymd(day);
+            var cell = document.createElement("div");
+            cell.className = "cal-day";
+            if (day.getMonth() !== month) cell.classList.add("other-month");
+            if (key === todayStr) cell.classList.add("today");
+            cell.dataset.date = key;
+            var num = document.createElement("div");
+            num.className = "cal-day-num";
+            num.textContent = String(day.getDate());
+            cell.appendChild(num);
+            var badges = document.createElement("div");
+            badges.className = "cal-badges";
+
+            entries.filter(function (e) { return e.date === key; }).forEach(function (e) {
+              var b = document.createElement("div");
+              b.className = "cal-badge " + (e.type === "holiday" ? "holiday" : "event");
+              b.textContent = e.title;
+              badges.appendChild(b);
             });
 
-          if (result.length < MIN_COMBO_PRODUCTS) return [];
-          return result;
+            vacations.forEach(function (v) {
+              var inRange = false;
+              eachDate(v.from, v.to, function (d) { if (d === key) inRange = true; });
+              if (inRange) {
+                var vb = document.createElement("div");
+                vb.className = "cal-badge";
+                vb.style.background = vendorColor(v.vendor);
+                vb.textContent = v.vendor;
+                badges.appendChild(vb);
+                cell.style.background = vendorColor(v.vendor);
+              }
+            });
+
+            cell.appendChild(badges);
+            cell.addEventListener("click", function () {
+              selectCalDay(cell.dataset.date);
+            });
+            grid.appendChild(cell);
+          }
+          renderVacList();
+          if (calSelected) selectCalDay(calSelected);
         }
 
-        function renderPromoTable(tableId, packBadgeId, combo) {
-          var table = document.getElementById(tableId);
-          var badge = document.getElementById(packBadgeId);
-          if (!table) return;
-          var tbody = table.querySelector("tbody");
-          if (!tbody) return;
-          tbody.innerHTML = "";
+        function selectCalDay(dateStr) {
+          calSelected = dateStr;
+          var input = document.getElementById("calSelectedDate");
+          if (input) input.value = dateStr;
+          var list = document.getElementById("calDayEntries");
+          if (!list) return;
+          list.innerHTML = "";
+          getCalendarEntries()
+            .filter(function (e) { return e.date === dateStr; })
+            .forEach(function (e, idx) {
+              var li = document.createElement("li");
+              var span = document.createElement("span");
+              span.textContent = (e.type === "holiday" ? "Feriado: " : "Evento: ") + e.title;
+              var btn = document.createElement("button");
+              btn.type = "button";
+              btn.textContent = "Eliminar";
+              btn.addEventListener("click", function () {
+                var all = getCalendarEntries().filter(function (x) {
+                  return !(x.date === e.date && x.title === e.title && x.type === e.type);
+                });
+                setCalendarEntries(all);
+                renderCalendar();
+              });
+              li.appendChild(span);
+              li.appendChild(btn);
+              list.appendChild(li);
+            });
+        }
 
-          if (!combo || !combo.rows || !combo.rows.length) {
-            if (badge) badge.textContent = "Empaque caja: —";
-            var tr = document.createElement("tr");
-            var td = document.createElement("td");
-            td.colSpan = 2;
-            td.className = "empty-msg";
-            td.textContent =
-              combo && combo.message
-                ? combo.message
-                : "No hay suficientes variedades del mismo color (mín. 3) para armar la caja combo.";
-            tr.appendChild(td);
-            tbody.appendChild(tr);
-            return;
-          }
-
-          if (badge) {
-            badge.textContent =
-              "Empaque caja: " +
-              combo.packing +
-              " (" +
-              combo.targetStems +
-              " tallos)";
-          }
-
-          combo.rows.forEach(function (r) {
-            var tr2 = document.createElement("tr");
-            var tdName = document.createElement("td");
-            tdName.textContent = r.name;
-            var tdStems = document.createElement("td");
-            tdStems.textContent = String(r.stems);
-            tr2.appendChild(tdName);
-            tr2.appendChild(tdStems);
-            tbody.appendChild(tr2);
+        function renderVacList() {
+          var list = document.getElementById("vacList");
+          if (!list) return;
+          list.innerHTML = "";
+          getVacations().forEach(function (v, i) {
+            var li = document.createElement("li");
+            var span = document.createElement("span");
+            span.innerHTML =
+              '<span class="vendor-swatch" style="background:' +
+              vendorColor(v.vendor) +
+              '"></span>' +
+              v.vendor +
+              ": " +
+              v.from +
+              " → " +
+              v.to;
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.textContent = "Eliminar";
+            btn.addEventListener("click", function () {
+              var all = getVacations().filter(function (_, j) { return j !== i; });
+              setVacations(all);
+              renderCalendar();
+              renderTurnos();
+            });
+            li.appendChild(span);
+            li.appendChild(btn);
+            list.appendChild(li);
           });
         }
 
-        function buildColorCombo(items, colorGroup) {
-          var colorItems = pickColorItems(items, colorGroup);
-          if (colorItems.length < MIN_COMBO_PRODUCTS) {
-            return {
-              rows: [],
-              message:
-                "Se necesitan al menos 3 productos con color de la misma paleta en la columna Color de los archivos originales.",
-            };
+        function initCalendario() {
+          renderVendorSelect();
+          var prev = document.getElementById("calPrev");
+          var next = document.getElementById("calNext");
+          if (prev) {
+            prev.addEventListener("click", function () {
+              calView.month -= 1;
+              if (calView.month < 0) { calView.month = 11; calView.year -= 1; }
+              renderCalendar();
+            });
           }
-          var pack = comboPackingForItems(colorItems);
-          var rows = allocateComboStems(colorItems, pack.targetStems);
-          if (!rows.length) {
-            return {
-              rows: [],
-              message:
-                "No se pudo repartir tallos en 1 caja " +
-                pack.code +
-                " con al menos 3 productos.",
-            };
+          if (next) {
+            next.addEventListener("click", function () {
+              calView.month += 1;
+              if (calView.month > 11) { calView.month = 0; calView.year += 1; }
+              renderCalendar();
+            });
           }
-          return {
-            rows: rows,
-            packing: pack.code,
-            targetStems: pack.targetStems,
-          };
+          var addBtn = document.getElementById("calAddEntryBtn");
+          if (addBtn) {
+            addBtn.addEventListener("click", function () {
+              var date = document.getElementById("calSelectedDate").value;
+              var type = document.getElementById("calEntryType").value;
+              var title = String(document.getElementById("calEntryTitle").value || "").trim();
+              if (!date || !title) return;
+              var all = getCalendarEntries();
+              all.push({ date: date, type: type, title: title });
+              setCalendarEntries(all);
+              document.getElementById("calEntryTitle").value = "";
+              renderCalendar();
+            });
+          }
+          var vacBtn = document.getElementById("vacAddBtn");
+          if (vacBtn) {
+            vacBtn.addEventListener("click", function () {
+              var vendor = document.getElementById("vacVendor").value;
+              var from = document.getElementById("vacFrom").value;
+              var to = document.getElementById("vacTo").value;
+              if (!vendor || !from || !to) return;
+              var all = getVacations();
+              all.push({ vendor: vendor, from: from, to: to });
+              setVacations(all);
+              renderCalendar();
+              renderTurnos();
+            });
+          }
+          var dateInp = document.getElementById("calSelectedDate");
+          if (dateInp) {
+            dateInp.addEventListener("change", function () {
+              if (dateInp.value) {
+                var d = parseYmd(dateInp.value);
+                if (d) {
+                  calView.year = d.getFullYear();
+                  calView.month = d.getMonth();
+                  renderCalendar();
+                  selectCalDay(dateInp.value);
+                }
+              }
+            });
+          }
+          renderCalendar();
         }
 
-        function updatePromocionesFromRows(allRows) {
-          var catalog = computePromoCatalog(allRows);
-          lastPromoCandidates = catalog.items || [];
-          if (catalog.error) {
-            var errCombo = { rows: [], message: catalog.error };
-            renderPromoTable("promoWarmTable", "promoWarmPack", errCombo);
-            renderPromoTable("promoColdTable", "promoColdPack", errCombo);
-            return;
-          }
-          renderPromoTable(
-            "promoWarmTable",
-            "promoWarmPack",
-            buildColorCombo(catalog.items, "warm"),
-          );
-          renderPromoTable(
-            "promoColdTable",
-            "promoColdPack",
-            buildColorCombo(catalog.items, "cold"),
-          );
+        // ——— Turnos ———
+        function isOnVacation(vendor, dateStr) {
+          return getVacations().some(function (v) {
+            if (v.vendor !== vendor) return false;
+            var ok = false;
+            eachDate(v.from, v.to, function (d) { if (d === dateStr) ok = true; });
+            return ok;
+          });
         }
 
-        function resetPromocionesTables() {
-          lastPromoCandidates = [];
-          ["promoWarmPack", "promoColdPack"].forEach(function (id) {
-            var badge = document.getElementById(id);
-            if (badge) badge.textContent = "Empaque caja: —";
+        function allSaturdays(year) {
+          var out = [];
+          var d = new Date(year, 0, 1);
+          while (d.getDay() !== 6) d.setDate(d.getDate() + 1);
+          while (d.getFullYear() === year) {
+            out.push(ymd(d));
+            d.setDate(d.getDate() + 7);
+          }
+          return out;
+        }
+
+        function assignSaturdays(year, roster) {
+          var sats = allSaturdays(year);
+          var idx = 0;
+          return sats.map(function (dateStr) {
+            if (!roster.length) {
+              return { date: dateStr, person: null, conflict: false, note: "Sin roster" };
+            }
+            var tries = 0;
+            var person = null;
+            var conflict = false;
+            var note = "";
+            while (tries < roster.length) {
+              var candidate = roster[idx % roster.length].name;
+              idx++;
+              tries++;
+              if (isOnVacation(candidate, dateStr)) {
+                conflict = true;
+                note = candidate + " en vacaciones → se reasigna";
+                continue;
+              }
+              person = candidate;
+              break;
+            }
+            if (!person) {
+              person = roster[(idx - 1) % roster.length].name;
+              conflict = true;
+              note = "Todos en vacaciones; se asignó igual a " + person;
+            }
+            return { date: dateStr, person: person, conflict: conflict, note: note };
           });
-          ["promoWarmTable", "promoColdTable"].forEach(function (id) {
-            var table = document.getElementById(id);
-            if (!table) return;
-            var tbody = table.querySelector("tbody");
-            if (!tbody) return;
-            tbody.innerHTML =
-              '<tr><td colspan="2" class="empty-msg">Procesa archivos en DISPONIBILIDAD para generar combos.</td></tr>';
+        }
+
+        function renderTurnosRoster() {
+          var ul = document.getElementById("turnosRoster");
+          if (!ul) return;
+          var roster = getRoster();
+          ul.innerHTML = "";
+          roster.forEach(function (v, i) {
+            var li = document.createElement("li");
+            li.draggable = true;
+            li.dataset.index = String(i);
+            li.innerHTML =
+              '<span class="handle">⋮⋮</span>' +
+              '<span class="vendor-swatch" style="background:' + v.color + '"></span>' +
+              '<span class="name"></span>' +
+              '<button type="button" class="btn-sm-soft" data-up>↑</button>' +
+              '<button type="button" class="btn-sm-soft" data-down>↓</button>' +
+              '<button type="button" class="btn-sm-soft" data-del>✕</button>';
+            li.querySelector(".name").textContent = v.name;
+            li.querySelector("[data-up]").addEventListener("click", function () {
+              if (i === 0) return;
+              var r = getRoster();
+              var tmp = r[i - 1]; r[i - 1] = r[i]; r[i] = tmp;
+              setRoster(r); renderTurnos();
+            });
+            li.querySelector("[data-down]").addEventListener("click", function () {
+              var r = getRoster();
+              if (i >= r.length - 1) return;
+              var tmp = r[i + 1]; r[i + 1] = r[i]; r[i] = tmp;
+              setRoster(r); renderTurnos();
+            });
+            li.querySelector("[data-del]").addEventListener("click", function () {
+              var r = getRoster().filter(function (_, j) { return j !== i; });
+              setRoster(r); renderVendorSelect(); renderTurnos();
+            });
+            ul.appendChild(li);
           });
+        }
+
+        function renderTurnos() {
+          renderTurnosRoster();
+          var yearInp = document.getElementById("turnosYear");
+          var year = yearInp && yearInp.value ? Number(yearInp.value) : new Date().getFullYear();
+          if (yearInp && !yearInp.value) yearInp.value = String(year);
+          var box = document.getElementById("turnosSaturdays");
+          if (!box) return;
+          box.innerHTML = "";
+          var assignments = assignSaturdays(year, getRoster());
+          assignments.forEach(function (a) {
+            var card = document.createElement("div");
+            card.className = "sat-card" + (a.conflict ? " conflict" : "");
+            var d = parseYmd(a.date);
+            var dateLabel = d
+              ? d.toLocaleDateString("es", { day: "2-digit", month: "short" })
+              : a.date;
+            card.innerHTML =
+              '<div class="sat-date"></div>' +
+              '<div class="sat-person"></div>' +
+              (a.note ? '<div class="sat-alert"></div>' : "");
+            card.querySelector(".sat-date").textContent = dateLabel + " · sáb";
+            var personEl = card.querySelector(".sat-person");
+            personEl.style.background = vendorColor(a.person || "");
+            personEl.textContent = a.person || "—";
+            if (a.note) card.querySelector(".sat-alert").textContent = a.note;
+            box.appendChild(card);
+          });
+        }
+
+        function initTurnos() {
+          var yearInp = document.getElementById("turnosYear");
+          if (yearInp) yearInp.value = String(new Date().getFullYear());
+          var addBtn = document.getElementById("turnosAddBtn");
+          if (addBtn) {
+            addBtn.addEventListener("click", function () {
+              var name = String(document.getElementById("turnosNewName").value || "").trim();
+              if (!name) return;
+              var r = getRoster();
+              if (r.some(function (v) { return v.name.toLowerCase() === name.toLowerCase(); })) return;
+              var colors = ["#ffc9c9", "#b2f2bb", "#a5d8ff", "#ffec99", "#eebefa", "#ffd8a8"];
+              r.push({ name: name, color: colors[r.length % colors.length] });
+              setRoster(r);
+              document.getElementById("turnosNewName").value = "";
+              renderVendorSelect();
+              renderTurnos();
+            });
+          }
+          var rebuild = document.getElementById("turnosRebuildBtn");
+          if (rebuild) rebuild.addEventListener("click", renderTurnos);
+          if (yearInp) yearInp.addEventListener("change", renderTurnos);
+          renderTurnos();
         }
 
         function initTabs() {
@@ -1549,16 +2266,20 @@
                 b.setAttribute("aria-selected", active ? "true" : "false");
               });
               document.querySelectorAll(".tab-panel").forEach(function (panel) {
-                panel.classList.toggle(
-                  "active",
-                  panel.id === "tab-" + tab,
-                );
+                panel.classList.toggle("active", panel.id === "tab-" + tab);
               });
+              if (tab === "calendario") renderCalendar();
+              if (tab === "turnos") renderTurnos();
+              if (tab === "promociones") renderPromociones();
             });
           });
         }
 
         initTabs();
+        initPromociones();
+        initCalendario();
+        initTurnos();
+
 
         function normalizeSpecies(name) {
           return String(name || "").trim().toUpperCase();
@@ -1742,7 +2463,8 @@
               var g = r.grado == null ? "" : String(r.grado);
               var l = r.largo == null ? "" : String(r.largo);
               var v = r.variedad == null ? "" : String(r.variedad);
-              lines.push([c, g, l, v].join("\t"));
+              var p = r.precio == null ? "" : String(r.precio);
+              lines.push([c, g, l, v, p].join("\t"));
             }
           });
           return lines.join("\n");
@@ -1750,18 +2472,19 @@
 
         function buildWorkbook(rows) {
           var data = [];
-          data.push(["# Cajas", "Grado", "Largo", "Variedad"]);
+          data.push(["# Cajas", "Grado", "Largo", "Variedad", "Precio"]);
           rows.forEach(function (r) {
             if (r.isTitle) {
-              data.push([r.tipoFlor || "", "", "", ""]);
+              data.push([r.tipoFlor || "", "", "", "", ""]);
             } else if (r.isSeparator) {
-              data.push(["", "", "", ""]);
+              data.push(["", "", "", "", ""]);
             } else {
               data.push([
                 r.cajas == null ? "" : r.cajas,
                 r.grado == null ? "" : r.grado,
                 r.largo == null ? "" : r.largo,
                 r.variedad == null ? "" : r.variedad,
+                r.precio == null ? "" : r.precio,
               ]);
             }
           });
@@ -1792,10 +2515,11 @@
             Promise.all(files.map(readSheetFromFile))
               .then(function (results) {
                 var allRows = [].concat.apply([], results);
-                var topVarieties = computeTopVarieties(allRows);
+                var topVarieties = computeTopN(allRows, 5);
                 var processedRows = processRows(allRows);
                 prependAgroganaHeader(processedRows);
                 appendSmilaxSection(processedRows);
+                applyPricesToRows(processedRows);
                 var tsv = rowsToTsvNoHeader(processedRows);
                 resultText.value = tsv;
                 topVarietiesBox.value = formatTopVarieties(topVarieties);
@@ -1805,7 +2529,7 @@
                   " filas (incluyendo títulos y separadores)";
                 excelWorkbook = buildWorkbook(processedRows);
                 resultSection.classList.add("visible");
-                updatePromocionesFromRows(allRows);
+                syncAppStateFromProcess(allRows, processedRows, tsv);
                 showMessage("Procesado correctamente.", "success");
               })
               .catch(function (err) {
@@ -1862,7 +2586,7 @@
             excelWorkbook = null;
             document.getElementById("copyFeedback").textContent = "";
             clearMessage();
-            resetPromocionesTables();
+            clearAppStateProcessed();
             droppedFiles = [null, null, null, null, null];
             inputs.forEach(function (inp) {
               if (inp) inp.value = "";
