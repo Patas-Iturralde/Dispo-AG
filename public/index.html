@@ -127,6 +127,28 @@
         color: var(--muted);
         line-height: 1.35;
       }
+      .missing-prices {
+        margin-top: 0.75rem;
+        padding: 0.7rem 0.85rem;
+        background: #fff6e8;
+        border: 1px solid #efc57a;
+        border-radius: 8px;
+        font-size: 0.84rem;
+        color: #6b4e00;
+        line-height: 1.45;
+      }
+      .missing-prices[hidden] {
+        display: none !important;
+      }
+      .missing-prices strong {
+        display: block;
+        margin-bottom: 0.35rem;
+      }
+      .promo-meta {
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin: -0.35rem 0 0.85rem;
+      }
       .top-varieties-panel {
         width: 100%;
         flex-shrink: 0;
@@ -962,6 +984,7 @@
             class="form-control result-textarea"
             placeholder="Resultado listo para copiar o enviar"
           ></textarea>
+          <div class="missing-prices" id="missingPricesBox" hidden></div>
         </section>
       </main>
 
@@ -976,12 +999,12 @@
             />
             <div class="dz-title">Archivo maestro de precios</div>
             <div class="dz-hint">
-              Arrastra aquí o haz clic · solo variedades y precios
+              Arrastra aquí o haz clic · variedad + largo + precio (o columnas Precio/Price)
             </div>
             <div class="dz-filename" id="pricesFileName">&nbsp;</div>
           </label>
           <div class="prices-status" id="pricesStatus">
-            Sin archivo de precios cargado.
+            Sin archivo de precios cargado. Si cargas uno, se usa como prioridad y la lista base de Agrogana como respaldo.
           </div>
         </div>
         <div class="top-varieties-panel" id="topVarietiesPanel">
@@ -1002,7 +1025,8 @@
         <div class="tab-card">
           <h2>Promociones</h2>
           <p class="tab-lead">Top 10 variedades con mayor cantidad (desde Disponibilidad). Asigna un precio a cada una.</p>
-          <div id="promoEmpty" class="promo-empty">Procesa archivos en DISPONIBILIDAD para cargar el Top 10.</div>
+          <p class="promo-meta" id="promoWeekMeta"></p>
+          <div id="promoEmpty" class="promo-empty">Procesa archivos en DISPONIBILIDAD para fijar el Top 10 de la semana (válido hasta el sábado 23:59). Cada lunes se reinicia.</div>
           <ul class="promo-list" id="promoList" hidden></ul>
           <div class="promo-actions" id="promoActions" hidden>
             <button type="button" class="btn btn-primary btn-sm" id="promoSaveBtn">Guardar precios</button>
@@ -1363,7 +1387,9 @@
 
 
         // ——— Maestro de precios (panel Precios) ———
-        var priceMaster = []; // [{ name, price }]
+        var priceMaster = []; // [{ name, price, lengthCm }]
+        var basePriceMaster = []; // guía Agrogana embebida
+        var pricesFileActive = false;
         var pricesFileObj = null;
         var COLOR_TOKENS = [
           "sky blue",
@@ -1411,7 +1437,6 @@
         function parsePriceValue(raw) {
           var s = String(raw == null ? "" : raw).trim();
           if (!s) return null;
-          var hasDollar = /\$/.test(s);
           s = s.replace(/\$/g, "").replace(/\s/g, "");
           if (!s) return null;
           if (/\d+\.\d{3},\d+/.test(s)) {
@@ -1426,7 +1451,15 @@
 
         function formatPriceOut(n) {
           if (n == null || n === "" || isNaN(n)) return "";
-          return String(Math.round(n * 1000) / 1000);
+          var rounded = Math.round(n * 1000) / 1000;
+          return String(rounded).replace(".", ",");
+        }
+
+        function parseLengthCm(raw) {
+          var m = String(raw == null ? "" : raw).match(/(\d+(?:[.,]\d+)?)/);
+          if (!m) return null;
+          var n = parseFloat(m[1].replace(",", "."));
+          return isNaN(n) ? null : Math.round(n);
         }
 
         function normalizeVarietyKey(name) {
@@ -1469,6 +1502,20 @@
           return true;
         }
 
+        function varietyNamesMatch(aName, bName) {
+          if (!colorsCompatible(aName, bName)) return false;
+          var target = normalizeVarietyKey(aName);
+          var targetStripped = normalizeVarietyKey(stripShortLetterSuffix(aName));
+          var c = normalizeVarietyKey(bName);
+          var cStrip = normalizeVarietyKey(stripShortLetterSuffix(bName));
+          return (
+            c === target ||
+            c === targetStripped ||
+            cStrip === target ||
+            cStrip === targetStripped
+          );
+        }
+
         function detectPriceColumn(sample, keys) {
           var byName = findKey(sample, [
             "price",
@@ -1479,6 +1526,7 @@
             "price usd",
             "unit price",
             "pvp",
+            "farm price",
           ]);
           if (byName) return byName;
 
@@ -1506,26 +1554,34 @@
           if (!rows || !rows.length) return [];
           var sample = rows[0] || {};
           var keys = Object.keys(sample);
-          var varKey =
-            findKey(sample, [
-              "variedad",
-              "variety",
-              "nombre",
-              "name",
-              "product",
-              "producto",
-              "flor",
-              "descripcion",
-              "description",
-            ]) || keys[0];
+          var varKey = findKey(sample, [
+            "variedad",
+            "variety",
+            "nombre",
+            "name",
+            "producto",
+            "flor",
+            "descripcion",
+            "description",
+          ]);
+          if (!varKey) {
+            varKey = findKey(sample, ["product"]) || keys[0];
+          }
+          var lenKey = findKey(sample, [
+            "largo",
+            "length",
+            "lenght",
+            "longitud",
+            "cm",
+          ]);
           var priceKey = detectPriceColumn(sample, keys);
           if (!priceKey) {
-            for (var i = 0; i < Math.min(rows.length, 30); i++) {
-              var r = rows[i];
+            for (var i = 0; i < Math.min(rows.length, 40); i++) {
+              var rScan = rows[i];
               for (var j = 0; j < keys.length; j++) {
                 var k = keys[j];
-                if (k === varKey) continue;
-                var s = String(r[k] == null ? "" : r[k]);
+                if (k === varKey || k === lenKey) continue;
+                var s = String(rScan[k] == null ? "" : rScan[k]);
                 if (/\$/.test(s) || parsePriceValue(s) != null) {
                   priceKey = k;
                   break;
@@ -1537,54 +1593,106 @@
           if (!varKey || !priceKey) return [];
 
           var out = [];
+          var lastName = "";
           rows.forEach(function (r) {
             var name = String(r[varKey] == null ? "" : r[varKey]).trim();
+            if (name) lastName = name;
+            else name = lastName;
             if (!name) return;
             var price = parsePriceValue(r[priceKey]);
             if (price == null) return;
-            out.push({ name: name, price: price });
+            var lengthRaw = lenKey
+              ? String(r[lenKey] == null ? "" : r[lenKey]).trim()
+              : "";
+            out.push({
+              name: name,
+              price: price,
+              lengthCm: lengthRaw ? parseLengthCm(lengthRaw) : null,
+            });
           });
           return out;
         }
 
-        function lookupPriceForVariety(variedad) {
-          if (!priceMaster.length || !variedad) return "";
-          var target = normalizeVarietyKey(variedad);
-          var targetStripped = normalizeVarietyKey(
-            stripShortLetterSuffix(variedad),
-          );
-
-          function tryMatch(candidateName) {
-            if (!colorsCompatible(variedad, candidateName)) return false;
-            var c = normalizeVarietyKey(candidateName);
-            var cStrip = normalizeVarietyKey(
-              stripShortLetterSuffix(candidateName),
-            );
-            if (c === target) return true;
-            if (c === targetStripped) return true;
-            if (cStrip === target) return true;
-            if (cStrip === targetStripped) return true;
-            return false;
-          }
-
-          for (var i = 0; i < priceMaster.length; i++) {
-            if (tryMatch(priceMaster[i].name)) {
-              return formatPriceOut(priceMaster[i].price);
+        function lookupInList(list, variedad, lengthCm) {
+          if (!list || !list.length || !variedad) return null;
+          var exact = null;
+          var anyName = null;
+          for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (!varietyNamesMatch(variedad, item.name)) continue;
+            if (
+              lengthCm != null &&
+              item.lengthCm != null &&
+              item.lengthCm === lengthCm
+            ) {
+              exact = item.price;
+              break;
+            }
+            if (item.lengthCm == null && anyName == null) {
+              anyName = item.price;
             }
           }
+          if (exact != null) return exact;
+          return anyName;
+        }
+
+        function lookupPriceForVariety(variedad, largo) {
+          if (!variedad) return "";
+          if (!pricesFileActive) return "";
+          var nameKey = normalizeVarietyKey(variedad);
+          if (nameKey === "smilax garland" || nameKey.indexOf("smilax garland") !== -1) {
+            return formatPriceOut(3.5);
+          }
+          var lengthCm = parseLengthCm(largo);
+          var fromUser = lookupInList(priceMaster, variedad, lengthCm);
+          if (fromUser != null) return formatPriceOut(fromUser);
+          var fromBase = lookupInList(basePriceMaster, variedad, lengthCm);
+          if (fromBase != null) return formatPriceOut(fromBase);
           return "";
         }
 
         function applyPricesToRows(rows) {
-          if (!rows || !rows.length) return rows;
+          var missing = [];
+          var seen = {};
+          if (!rows || !rows.length) return { rows: rows, missing: missing };
           rows.forEach(function (r) {
             if (r.isTitle || r.isSeparator) {
               r.precio = "";
               return;
             }
-            r.precio = lookupPriceForVariety(r.variedad);
+            if (!pricesFileActive) {
+              delete r.precio;
+              return;
+            }
+            r.precio = lookupPriceForVariety(r.variedad, r.largo);
+            if (!r.precio) {
+              var label =
+                (r.variedad || "") +
+                (r.largo ? " (" + r.largo + ")" : "");
+              var key = normalizeVarietyKey(label);
+              if (label && !seen[key]) {
+                seen[key] = true;
+                missing.push(label);
+              }
+            }
           });
-          return rows;
+          return { rows: rows, missing: missing };
+        }
+
+        function updateMissingPricesUI(missing) {
+          var box = document.getElementById("missingPricesBox");
+          if (!box) return;
+          if (!pricesFileActive || !missing || !missing.length) {
+            box.hidden = true;
+            box.innerHTML = "";
+            return;
+          }
+          box.hidden = false;
+          box.innerHTML =
+            "<strong>Variedades sin precio (" +
+            missing.length +
+            ")</strong>" +
+            escapeHtml(missing.join(" · "));
         }
 
         function updatePricesUI(file, count, err) {
@@ -1599,14 +1707,17 @@
           if (status) {
             if (err) status.textContent = err;
             else if (!file)
-              status.textContent = "Sin archivo de precios cargado.";
+              status.textContent =
+                "Sin archivo de precios cargado. Si cargas uno, se usa como prioridad y la lista base de Agrogana como respaldo.";
             else
               status.textContent =
                 count +
-                " variedad" +
-                (count === 1 ? "" : "es") +
-                " con precio cargada" +
+                " precio" +
                 (count === 1 ? "" : "s") +
+                " en archivo cargado" +
+                (basePriceMaster.length
+                  ? " (+ " + basePriceMaster.length + " de la lista base como respaldo)"
+                  : "") +
                 ".";
           }
         }
@@ -1618,18 +1729,21 @@
             .then(function (rows) {
               priceMaster = buildPriceMasterFromRows(rows);
               if (!priceMaster.length) {
+                pricesFileActive = false;
                 updatePricesUI(
                   file,
                   0,
-                  "No se detectaron variedades/precios. Usa columnas Variedad y Precio/Price (o valores con $).",
+                  "No se detectaron variedades/precios. Usa columnas Variedad/Variety, Largo/Length y Precio/Price (o valores como 0,35).",
                 );
                 return;
               }
+              pricesFileActive = true;
               updatePricesUI(file, priceMaster.length);
               AppState.priceMaster = priceMaster;
             })
             .catch(function (err) {
               priceMaster = [];
+              pricesFileActive = false;
               updatePricesUI(
                 file,
                 0,
@@ -1638,9 +1752,33 @@
             });
         }
 
+        function loadBasePriceGuide() {
+          return fetch("base-prices.json")
+            .then(function (res) {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.json();
+            })
+            .then(function (data) {
+              if (!Array.isArray(data)) return;
+              basePriceMaster = data.map(function (d) {
+                return {
+                  name: d.name,
+                  price: Number(d.price),
+                  lengthCm: d.lengthCm != null ? d.lengthCm : parseLengthCm(d.length),
+                };
+              }).filter(function (d) {
+                return d.name && !isNaN(d.price);
+              });
+            })
+            .catch(function () {
+              basePriceMaster = [];
+            });
+        }
+
         (function initPricesPanel() {
           var input = document.getElementById("pricesFile");
           var drop = document.getElementById("pricesDrop");
+          loadBasePriceGuide();
           if (!input || !drop) return;
           input.addEventListener("change", function () {
             var f = input.files && input.files[0];
@@ -1688,10 +1826,12 @@
           priceMaster: [],
           tsv: "",
           updatedAt: null,
+          promoLockedUntil: null,
         };
 
         var STORAGE_KEYS = {
           promoPrices: "dispo-ag-promo-prices",
+          promoWeek: "dispo-ag-promo-week",
           calendar: "dispo-ag-calendar",
           vacations: "dispo-ag-vacations",
           roster: "dispo-ag-roster",
@@ -1722,6 +1862,117 @@
           localStorage.setItem(key, JSON.stringify(value));
         }
 
+        function ensureRosterPersisted() {
+          var r = loadJSON(STORAGE_KEYS.roster, null);
+          if (!r || !r.length) {
+            saveJSON(STORAGE_KEYS.roster, DEFAULT_VENDORS.slice());
+          }
+        }
+
+        function saturdayEndOfWeek(now) {
+          var d = now ? new Date(now.getTime()) : new Date();
+          var day = d.getDay(); // 0=dom … 6=sáb
+          if (day === 0) return null; // domingo: ciclo cerrado hasta lunes
+          var daysToSat = 6 - day;
+          return new Date(
+            d.getFullYear(),
+            d.getMonth(),
+            d.getDate() + daysToSat,
+            23,
+            59,
+            59,
+            999,
+          );
+        }
+
+        function isPromoWeekExpired(snap, now) {
+          if (!snap || !snap.expiresAt) return true;
+          var n = now || new Date();
+          if (n.getDay() === 1) {
+            // Lunes: si el cierre era de la semana pasada, reinicia
+            var exp = new Date(snap.expiresAt);
+            if (exp < n) return true;
+          }
+          return n.getTime() > new Date(snap.expiresAt).getTime();
+        }
+
+        function clearPromoWeek() {
+          localStorage.removeItem(STORAGE_KEYS.promoWeek);
+          saveJSON(STORAGE_KEYS.promoPrices, {});
+          AppState.top10 = [];
+          AppState.promoPrices = {};
+          AppState.promoLockedUntil = null;
+        }
+
+        function loadPromoWeekIntoState() {
+          var snap = loadJSON(STORAGE_KEYS.promoWeek, null);
+          var now = new Date();
+          if (!snap || isPromoWeekExpired(snap, now)) {
+            if (snap) clearPromoWeek();
+            return null;
+          }
+          AppState.top10 = snap.top10 || [];
+          AppState.promoPrices = snap.promoPrices || loadJSON(STORAGE_KEYS.promoPrices, {});
+          AppState.promoLockedUntil = snap.expiresAt || null;
+          return snap;
+        }
+
+        function lockPromoWeekFromTop10(top10) {
+          var now = new Date();
+          var existing = loadJSON(STORAGE_KEYS.promoWeek, null);
+          if (existing && !isPromoWeekExpired(existing, now) && existing.top10 && existing.top10.length) {
+            AppState.top10 = existing.top10;
+            AppState.promoPrices = existing.promoPrices || {};
+            AppState.promoLockedUntil = existing.expiresAt;
+            return existing;
+          }
+          var expires = saturdayEndOfWeek(now);
+          if (!expires) {
+            // domingo: no fijar hasta el lunes
+            clearPromoWeek();
+            return null;
+          }
+          var prices = loadJSON(STORAGE_KEYS.promoPrices, {});
+          var snap = {
+            top10: top10 || [],
+            promoPrices: prices,
+            lockedAt: now.toISOString(),
+            expiresAt: expires.toISOString(),
+          };
+          saveJSON(STORAGE_KEYS.promoWeek, snap);
+          AppState.top10 = snap.top10;
+          AppState.promoPrices = snap.promoPrices;
+          AppState.promoLockedUntil = snap.expiresAt;
+          return snap;
+        }
+
+        function persistPromoWeekPrices() {
+          var snap = loadJSON(STORAGE_KEYS.promoWeek, null);
+          if (!snap || isPromoWeekExpired(snap, new Date())) return;
+          snap.promoPrices = AppState.promoPrices || {};
+          saveJSON(STORAGE_KEYS.promoWeek, snap);
+          saveJSON(STORAGE_KEYS.promoPrices, AppState.promoPrices);
+        }
+
+        function updatePromoWeekMeta() {
+          var el = document.getElementById("promoWeekMeta");
+          if (!el) return;
+          var snap = loadJSON(STORAGE_KEYS.promoWeek, null);
+          if (!snap || isPromoWeekExpired(snap, new Date()) || !snap.top10 || !snap.top10.length) {
+            el.textContent = "Sin promoción fijada esta semana.";
+            return;
+          }
+          var until = new Date(snap.expiresAt);
+          el.textContent =
+            "Fijada hasta el sábado " +
+            until.toLocaleDateString("es-EC", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }) +
+            " 23:59. Se reinicia el lunes.";
+        }
+
         function computeTopN(allRows, n) {
           if (!allRows.length) return [];
           var sample = allRows[0] || {};
@@ -1746,15 +1997,14 @@
         }
 
         function syncAppStateFromProcess(allRows, processedRows, tsv) {
-          var prices = loadJSON(STORAGE_KEYS.promoPrices, {});
           AppState.rawRows = allRows;
           AppState.processedRows = processedRows;
           AppState.topVarieties = computeTopN(allRows, 5);
-          AppState.top10 = computeTopN(allRows, 10);
-          AppState.promoPrices = prices;
-          AppState.priceMaster = priceMaster;
           AppState.tsv = tsv;
           AppState.updatedAt = new Date().toISOString();
+          AppState.priceMaster = priceMaster;
+          var top10 = computeTopN(allRows, 10);
+          lockPromoWeekFromTop10(top10);
           renderPromociones();
         }
 
@@ -1762,14 +2012,16 @@
           AppState.rawRows = [];
           AppState.processedRows = [];
           AppState.topVarieties = [];
-          AppState.top10 = [];
           AppState.tsv = "";
           AppState.updatedAt = null;
+          loadPromoWeekIntoState();
           renderPromociones();
         }
 
         // ——— Promociones ———
         function renderPromociones() {
+          loadPromoWeekIntoState();
+          updatePromoWeekMeta();
           var empty = document.getElementById("promoEmpty");
           var list = document.getElementById("promoList");
           var actions = document.getElementById("promoActions");
@@ -1809,6 +2061,7 @@
             inp.value = price;
             inp.addEventListener("change", function () {
               AppState.promoPrices[key] = inp.value === "" ? "" : Number(inp.value);
+              persistPromoWeekPrices();
             });
             list.appendChild(li);
           });
@@ -1824,7 +2077,7 @@
                 var k = inp.getAttribute("data-promo-key");
                 AppState.promoPrices[k] = inp.value === "" ? "" : Number(inp.value);
               });
-              saveJSON(STORAGE_KEYS.promoPrices, AppState.promoPrices);
+              persistPromoWeekPrices();
               if (feedback) {
                 feedback.textContent = "Guardado";
                 setTimeout(function () { feedback.textContent = ""; }, 1600);
@@ -1849,7 +2102,7 @@
               URL.revokeObjectURL(a.href);
             });
           }
-          AppState.promoPrices = loadJSON(STORAGE_KEYS.promoPrices, {});
+          loadPromoWeekIntoState();
           renderPromociones();
         }
 
@@ -1892,12 +2145,13 @@
           saveJSON(STORAGE_KEYS.vacations, list);
         }
         function getRoster() {
+          ensureRosterPersisted();
           var r = loadJSON(STORAGE_KEYS.roster, null);
           if (!r || !r.length) return DEFAULT_VENDORS.slice();
           return r;
         }
         function setRoster(list) {
-          saveJSON(STORAGE_KEYS.roster, list);
+          saveJSON(STORAGE_KEYS.roster, list || []);
         }
         function vendorColor(name) {
           var found = getRoster().find(function (v) { return v.name === name; });
@@ -2276,6 +2530,7 @@
         }
 
         initTabs();
+        ensureRosterPersisted();
         initPromociones();
         initCalendario();
         initTurnos();
@@ -2452,6 +2707,7 @@
 
         function rowsToTsvNoHeader(rows) {
           if (!rows || !rows.length) return "";
+          var withPrice = pricesFileActive;
           var lines = [];
           rows.forEach(function (r) {
             if (r.isSeparator) {
@@ -2463,29 +2719,39 @@
               var g = r.grado == null ? "" : String(r.grado);
               var l = r.largo == null ? "" : String(r.largo);
               var v = r.variedad == null ? "" : String(r.variedad);
-              var p = r.precio == null ? "" : String(r.precio);
-              lines.push([c, g, l, v, p].join("\t"));
+              if (withPrice) {
+                var p = r.precio == null ? "" : String(r.precio);
+                lines.push([c, g, l, v, p].join("\t"));
+              } else {
+                lines.push([c, g, l, v].join("\t"));
+              }
             }
           });
           return lines.join("\n");
         }
 
         function buildWorkbook(rows) {
+          var withPrice = pricesFileActive;
           var data = [];
-          data.push(["# Cajas", "Grado", "Largo", "Variedad", "Precio"]);
+          data.push(
+            withPrice
+              ? ["# Cajas", "Grado", "Largo", "Variedad", "Precio"]
+              : ["# Cajas", "Grado", "Largo", "Variedad"],
+          );
           rows.forEach(function (r) {
             if (r.isTitle) {
-              data.push([r.tipoFlor || "", "", "", "", ""]);
+              data.push(withPrice ? [r.tipoFlor || "", "", "", "", ""] : [r.tipoFlor || "", "", "", ""]);
             } else if (r.isSeparator) {
-              data.push(["", "", "", "", ""]);
+              data.push(withPrice ? ["", "", "", "", ""] : ["", "", "", ""]);
             } else {
-              data.push([
+              var row = [
                 r.cajas == null ? "" : r.cajas,
                 r.grado == null ? "" : r.grado,
                 r.largo == null ? "" : r.largo,
                 r.variedad == null ? "" : r.variedad,
-                r.precio == null ? "" : r.precio,
-              ]);
+              ];
+              if (withPrice) row.push(r.precio == null ? "" : r.precio);
+              data.push(row);
             }
           });
           var ws = XLSX.utils.aoa_to_sheet(data);
@@ -2519,7 +2785,8 @@
                 var processedRows = processRows(allRows);
                 prependAgroganaHeader(processedRows);
                 appendSmilaxSection(processedRows);
-                applyPricesToRows(processedRows);
+                var priced = applyPricesToRows(processedRows);
+                processedRows = priced.rows;
                 var tsv = rowsToTsvNoHeader(processedRows);
                 resultText.value = tsv;
                 topVarietiesBox.value = formatTopVarieties(topVarieties);
@@ -2529,6 +2796,7 @@
                   " filas (incluyendo títulos y separadores)";
                 excelWorkbook = buildWorkbook(processedRows);
                 resultSection.classList.add("visible");
+                updateMissingPricesUI(priced.missing);
                 syncAppStateFromProcess(allRows, processedRows, tsv);
                 showMessage("Procesado correctamente.", "success");
               })
@@ -2585,6 +2853,7 @@
             topVarietiesBox.value = "";
             excelWorkbook = null;
             document.getElementById("copyFeedback").textContent = "";
+            updateMissingPricesUI([]);
             clearMessage();
             clearAppStateProcessed();
             droppedFiles = [null, null, null, null, null];
