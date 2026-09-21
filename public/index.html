@@ -683,7 +683,7 @@
       }
       .cal-grid {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, 1fr) 2.2rem;
         gap: 4px;
       }
       .cal-dow {
@@ -693,6 +693,23 @@
         color: var(--muted);
         padding: 0.25rem 0;
         text-transform: uppercase;
+      }
+      .cal-dow.cal-week-head {
+        font-size: 0.62rem;
+        letter-spacing: 0.02em;
+      }
+      .cal-week-num {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 64px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--muted);
+        background: #f4f6f8;
+        border-radius: 8px;
+        border: 1px dashed var(--border);
+        user-select: none;
       }
       .cal-day {
         min-height: 64px;
@@ -729,6 +746,44 @@
       }
       .cal-badge.holiday { background: #ffe3e3; }
       .cal-badge.event { background: #fff3bf; }
+      .cal-badge.turno {
+        font-weight: 600;
+        border: 1px solid rgba(0,0,0,.12);
+        margin-top: 2px;
+      }
+      .cal-turno-panel {
+        margin-top: 0.85rem;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #f8fafb;
+      }
+      .cal-turno-panel[hidden] { display: none !important; }
+      .cal-turno-panel h3 {
+        margin: 0 0 0.45rem 0;
+      }
+      .cal-turno-panel .turno-name {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+      }
+      .sat-card .sat-swap {
+        margin-top: 0.4rem;
+      }
+      .sat-card .sat-swap select {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.25rem 0.35rem;
+        font-size: 0.75rem;
+        background: #fff;
+      }
+      .sat-card.swapped {
+        box-shadow: inset 0 0 0 2px #74c0fc;
+      }
       .cal-side h3 {
         margin: 0 0 0.5rem 0;
         font-size: 0.8rem;
@@ -858,13 +913,47 @@
       }
       .btn-sm-soft:hover { background: #f1f3f5; }
 
+      .dispo-options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem 1.25rem;
+        margin: 0 0 1rem;
+        padding: 0.75rem 0.9rem;
+        background: #f8f9fb;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+      }
+      .dispo-option {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text);
+        cursor: pointer;
+        user-select: none;
+        margin: 0;
+      }
+      .dispo-option input {
+        width: 1.05rem;
+        height: 1.05rem;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+      .dispo-option-hint {
+        font-weight: 400;
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
     </style>
   </head>
   <body>
     <div class="shell">
       <header class="header">
-        <h1>Disponibilidad</h1>
-        <p>Consolidador de archivos Excel</p>
+        <h1>OFFICE INFO</h1>
+        <p>DISPONIBILIDAD E INFORMACIÓN
+        </p>
       </header>
 
 
@@ -887,6 +976,18 @@
         <div id="messageArea"></div>
 
         <form id="uploadForm" enctype="multipart/form-data">
+          <div class="dispo-options" id="dispoOptions">
+            <label class="dispo-option" for="optColor">
+              <input type="checkbox" id="optColor" />
+              <span>Color</span>
+              <span class="dispo-option-hint">columna al lado de Variedad</span>
+            </label>
+            <label class="dispo-option" for="optPrices">
+              <input type="checkbox" id="optPrices" />
+              <span>Precios</span>
+              <span class="dispo-option-hint">lista default automática</span>
+            </label>
+          </div>
           <div class="section-title">Archivos Excel (.xls / .xlsx)</div>
           <div class="drop-grid">
             <label class="file-label" id="dz0" for="file1">
@@ -997,14 +1098,14 @@
               id="pricesFile"
               accept=".xls,.xlsx,.csv"
             />
-            <div class="dz-title">Archivo maestro de precios</div>
+            <div class="dz-title">Archivo adicional de precios</div>
             <div class="dz-hint">
-              Arrastra aquí o haz clic · variedad + largo + precio (o columnas Precio/Price)
+              Opcional · prioridad sobre la lista default · variedad + largo + precio
             </div>
             <div class="dz-filename" id="pricesFileName">&nbsp;</div>
           </label>
           <div class="prices-status" id="pricesStatus">
-            Sin archivo de precios cargado. Si cargas uno, se usa como prioridad y la lista base de Agrogana como respaldo.
+            Sin archivo adicional. Si activas Precios arriba, se usa la lista default. Si subes un archivo aquí, tiene prioridad.
           </div>
         </div>
         <div class="top-varieties-panel" id="topVarietiesPanel">
@@ -1039,7 +1140,7 @@
       <div class="tab-panel" id="tab-calendario" role="tabpanel" aria-labelledby="tabBtnCalendario">
         <div class="tab-card">
           <h2>Calendario</h2>
-          <p class="tab-lead">Eventos, feriados y vacaciones por vendedora.</p>
+          <p class="tab-lead">Eventos, feriados, vacaciones y turnos de sábado (sincronizados con la pestaña Turnos).</p>
           <div class="cal-layout">
             <div>
               <div class="cal-nav">
@@ -1054,6 +1155,16 @@
               <div class="field">
                 <label for="calSelectedDate">Fecha</label>
                 <input type="date" id="calSelectedDate" />
+              </div>
+              <div class="cal-turno-panel" id="calTurnoPanel" hidden>
+                <h3>Turno del sábado</h3>
+                <div class="turno-name" id="calTurnoName">—</div>
+                <div class="field">
+                  <label for="calTurnoSwap">Intercambiar por</label>
+                  <select id="calTurnoSwap"></select>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" id="calTurnoSwapBtn">Aplicar intercambio</button>
+                <button type="button" class="btn-sm-soft" id="calTurnoResetBtn" style="margin-left:0.35rem">Quitar intercambio</button>
               </div>
               <div class="field">
                 <label for="calEntryType">Tipo</label>
@@ -1093,7 +1204,7 @@
       <div class="tab-panel" id="tab-turnos" role="tabpanel" aria-labelledby="tabBtnTurnos">
         <div class="tab-card">
           <h2>Turnos de vendedoras</h2>
-          <p class="tab-lead">Rotación automática de sábados. Si hay vacaciones, se salta al siguiente y se marca alerta.</p>
+          <p class="tab-lead">Rotación automática de sábados. Puedes intercambiar personas. Los cambios se reflejan en el calendario.</p>
           <div class="turnos-layout">
             <div>
               <h3 style="font-size:0.8rem;text-transform:uppercase;color:var(--muted);margin:0 0 0.5rem">Orden de rotación</h3>
@@ -1387,10 +1498,12 @@
 
 
         // ——— Maestro de precios (panel Precios) ———
-        var priceMaster = []; // [{ name, price, lengthCm }]
-        var basePriceMaster = []; // guía Agrogana embebida
-        var pricesFileActive = false;
+        var priceMaster = []; // archivo adicional subido [{ name, price, lengthCm }]
+        var defaultPriceMaster = []; // lista default embebida
+        var hasUserPriceFile = false;
         var pricesFileObj = null;
+        var optColorEnabled = false;
+        var optPricesEnabled = false;
         var COLOR_TOKENS = [
           "sky blue",
           "light pink",
@@ -1636,18 +1749,27 @@
           return anyName;
         }
 
+        function pricesActive() {
+          return hasUserPriceFile || optPricesEnabled;
+        }
+
         function lookupPriceForVariety(variedad, largo) {
           if (!variedad) return "";
-          if (!pricesFileActive) return "";
+          if (!pricesActive()) return "";
           var nameKey = normalizeVarietyKey(variedad);
           if (nameKey === "smilax garland" || nameKey.indexOf("smilax garland") !== -1) {
             return formatPriceOut(3.5);
           }
           var lengthCm = parseLengthCm(largo);
-          var fromUser = lookupInList(priceMaster, variedad, lengthCm);
-          if (fromUser != null) return formatPriceOut(fromUser);
-          var fromBase = lookupInList(basePriceMaster, variedad, lengthCm);
-          if (fromBase != null) return formatPriceOut(fromBase);
+          if (hasUserPriceFile && priceMaster.length) {
+            var fromUser = lookupInList(priceMaster, variedad, lengthCm);
+            if (fromUser != null) return formatPriceOut(fromUser);
+            return "";
+          }
+          if (optPricesEnabled && defaultPriceMaster.length) {
+            var fromDefault = lookupInList(defaultPriceMaster, variedad, lengthCm);
+            if (fromDefault != null) return formatPriceOut(fromDefault);
+          }
           return "";
         }
 
@@ -1655,12 +1777,13 @@
           var missing = [];
           var seen = {};
           if (!rows || !rows.length) return { rows: rows, missing: missing };
+          var active = pricesActive();
           rows.forEach(function (r) {
             if (r.isTitle || r.isSeparator) {
               r.precio = "";
               return;
             }
-            if (!pricesFileActive) {
+            if (!active) {
               delete r.precio;
               return;
             }
@@ -1682,7 +1805,7 @@
         function updateMissingPricesUI(missing) {
           var box = document.getElementById("missingPricesBox");
           if (!box) return;
-          if (!pricesFileActive || !missing || !missing.length) {
+          if (!pricesActive() || !missing || !missing.length) {
             box.hidden = true;
             box.innerHTML = "";
             return;
@@ -1706,19 +1829,16 @@
           }
           if (status) {
             if (err) status.textContent = err;
-            else if (!file)
-              status.textContent =
-                "Sin archivo de precios cargado. Si cargas uno, se usa como prioridad y la lista base de Agrogana como respaldo.";
-            else
+            else if (!file) {
+              status.textContent = optPricesEnabled
+                ? "Sin archivo adicional. Se usará la lista default al procesar (casilla Precios activa)."
+                : "Sin archivo adicional. Activa Precios arriba para usar la lista default, o sube un archivo aquí (prioridad).";
+            } else
               status.textContent =
                 count +
                 " precio" +
                 (count === 1 ? "" : "s") +
-                " en archivo cargado" +
-                (basePriceMaster.length
-                  ? " (+ " + basePriceMaster.length + " de la lista base como respaldo)"
-                  : "") +
-                ".";
+                " en archivo adicional (prioridad sobre la lista default).";
           }
         }
 
@@ -1729,7 +1849,7 @@
             .then(function (rows) {
               priceMaster = buildPriceMasterFromRows(rows);
               if (!priceMaster.length) {
-                pricesFileActive = false;
+                hasUserPriceFile = false;
                 updatePricesUI(
                   file,
                   0,
@@ -1737,13 +1857,13 @@
                 );
                 return;
               }
-              pricesFileActive = true;
+              hasUserPriceFile = true;
               updatePricesUI(file, priceMaster.length);
               AppState.priceMaster = priceMaster;
             })
             .catch(function (err) {
               priceMaster = [];
-              pricesFileActive = false;
+              hasUserPriceFile = false;
               updatePricesUI(
                 file,
                 0,
@@ -1752,33 +1872,60 @@
             });
         }
 
-        function loadBasePriceGuide() {
-          return fetch("base-prices.json")
+        function loadDefaultPriceGuide() {
+          return fetch("default-prices.json")
             .then(function (res) {
               if (!res.ok) throw new Error("HTTP " + res.status);
               return res.json();
             })
             .then(function (data) {
               if (!Array.isArray(data)) return;
-              basePriceMaster = data.map(function (d) {
-                return {
-                  name: d.name,
-                  price: Number(d.price),
-                  lengthCm: d.lengthCm != null ? d.lengthCm : parseLengthCm(d.length),
-                };
-              }).filter(function (d) {
-                return d.name && !isNaN(d.price);
-              });
+              defaultPriceMaster = data
+                .map(function (d) {
+                  return {
+                    name: d.name,
+                    price: Number(d.price),
+                    lengthCm:
+                      d.lengthCm != null
+                        ? d.lengthCm
+                        : parseLengthCm(d.length),
+                  };
+                })
+                .filter(function (d) {
+                  return d.name && !isNaN(d.price);
+                });
             })
             .catch(function () {
-              basePriceMaster = [];
+              defaultPriceMaster = [];
             });
+        }
+
+        function initDispoOptions() {
+          var colorCb = document.getElementById("optColor");
+          var pricesCb = document.getElementById("optPrices");
+          optColorEnabled = loadJSON("dispo-ag-opt-color", false) === true;
+          optPricesEnabled = loadJSON("dispo-ag-opt-prices", false) === true;
+          if (colorCb) {
+            colorCb.checked = optColorEnabled;
+            colorCb.addEventListener("change", function () {
+              optColorEnabled = !!colorCb.checked;
+              saveJSON("dispo-ag-opt-color", optColorEnabled);
+            });
+          }
+          if (pricesCb) {
+            pricesCb.checked = optPricesEnabled;
+            pricesCb.addEventListener("change", function () {
+              optPricesEnabled = !!pricesCb.checked;
+              saveJSON("dispo-ag-opt-prices", optPricesEnabled);
+              updatePricesUI(pricesFileObj, priceMaster.length);
+            });
+          }
         }
 
         (function initPricesPanel() {
           var input = document.getElementById("pricesFile");
           var drop = document.getElementById("pricesDrop");
-          loadBasePriceGuide();
+          loadDefaultPriceGuide();
           if (!input || !drop) return;
           input.addEventListener("change", function () {
             var f = input.files && input.files[0];
@@ -1835,6 +1982,7 @@
           calendar: "dispo-ag-calendar",
           vacations: "dispo-ag-vacations",
           roster: "dispo-ag-roster",
+          turnoOverrides: "dispo-ag-turno-overrides",
         };
 
         var DEFAULT_VENDORS = [
@@ -2173,6 +2321,18 @@
           });
         }
 
+        function weekNumberFromJanuary(date) {
+          // Semana del año (lun–dom), contando desde la semana que contiene el 1 de enero.
+          var d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          var dow = (d.getDay() + 6) % 7; // 0=lun
+          var monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow);
+          var jan1 = new Date(d.getFullYear(), 0, 1);
+          var janDow = (jan1.getDay() + 6) % 7;
+          var firstMonday = new Date(d.getFullYear(), 0, 1 - janDow);
+          var diffDays = Math.round((monday - firstMonday) / 86400000);
+          return Math.floor(diffDays / 7) + 1;
+        }
+
         function renderCalendar() {
           var grid = document.getElementById("calGrid");
           var label = document.getElementById("calMonthLabel");
@@ -2190,6 +2350,11 @@
             el.textContent = d;
             grid.appendChild(el);
           });
+          var weekHead = document.createElement("div");
+          weekHead.className = "cal-dow cal-week-head";
+          weekHead.textContent = "Sem";
+          weekHead.title = "Número de semana desde enero";
+          grid.appendChild(weekHead);
 
           var first = new Date(year, month, 1);
           var startPad = (first.getDay() + 6) % 7; // Monday-first
@@ -2197,6 +2362,7 @@
           var todayStr = ymd(new Date());
           var entries = getCalendarEntries();
           var vacations = getVacations();
+          var assignmentMap = getAssignmentMapForYears([year - 1, year, year + 1]);
 
           for (var i = 0; i < 42; i++) {
             var day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
@@ -2233,20 +2399,64 @@
               }
             });
 
+            if (day.getDay() === 6 && assignmentMap[key] && assignmentMap[key].person) {
+              var turno = assignmentMap[key];
+              var tb = document.createElement("div");
+              tb.className = "cal-badge turno";
+              tb.style.background = vendorColor(turno.person);
+              tb.textContent = "Turno: " + turno.person + (turno.swapped ? " *" : "");
+              tb.title = turno.swapped
+                ? "Turno intercambiado manualmente"
+                : "Turno de sábado";
+              badges.appendChild(tb);
+            }
+
             cell.appendChild(badges);
             cell.addEventListener("click", function () {
               selectCalDay(cell.dataset.date);
             });
             grid.appendChild(cell);
+
+            if ((i + 1) % 7 === 0) {
+              var weekCell = document.createElement("div");
+              weekCell.className = "cal-week-num";
+              weekCell.textContent = String(weekNumberFromJanuary(day));
+              weekCell.title = "Semana " + weekCell.textContent;
+              grid.appendChild(weekCell);
+            }
           }
           renderVacList();
           if (calSelected) selectCalDay(calSelected);
+        }
+
+        function updateCalTurnoPanel(dateStr) {
+          var panel = document.getElementById("calTurnoPanel");
+          var nameEl = document.getElementById("calTurnoName");
+          var sel = document.getElementById("calTurnoSwap");
+          if (!panel || !nameEl || !sel) return;
+          var d = parseYmd(dateStr);
+          if (!d || d.getDay() !== 6) {
+            panel.hidden = true;
+            return;
+          }
+          var map = getAssignmentMapForYears([d.getFullYear()]);
+          var a = map[dateStr];
+          if (!a || !a.person) {
+            panel.hidden = true;
+            return;
+          }
+          panel.hidden = false;
+          nameEl.textContent = a.person + (a.swapped ? " (intercambio)" : "");
+          nameEl.style.background = vendorColor(a.person);
+          fillTurnoSwapSelect(sel, a.person);
+          panel.dataset.date = dateStr;
         }
 
         function selectCalDay(dateStr) {
           calSelected = dateStr;
           var input = document.getElementById("calSelectedDate");
           if (input) input.value = dateStr;
+          updateCalTurnoPanel(dateStr);
           var list = document.getElementById("calDayEntries");
           if (!list) return;
           list.innerHTML = "";
@@ -2294,8 +2504,7 @@
             btn.addEventListener("click", function () {
               var all = getVacations().filter(function (_, j) { return j !== i; });
               setVacations(all);
-              renderCalendar();
-              renderTurnos();
+              refreshTurnosViews();
             });
             li.appendChild(span);
             li.appendChild(btn);
@@ -2345,8 +2554,7 @@
               var all = getVacations();
               all.push({ vendor: vendor, from: from, to: to });
               setVacations(all);
-              renderCalendar();
-              renderTurnos();
+              refreshTurnosViews();
             });
           }
           var dateInp = document.getElementById("calSelectedDate");
@@ -2363,10 +2571,94 @@
               }
             });
           }
+          var swapBtn = document.getElementById("calTurnoSwapBtn");
+          if (swapBtn) {
+            swapBtn.addEventListener("click", function () {
+              var panel = document.getElementById("calTurnoPanel");
+              var sel = document.getElementById("calTurnoSwap");
+              var dateStr = panel && panel.dataset.date;
+              var person = sel && sel.value;
+              if (!dateStr || !person) return;
+              swapTurnoPerson(dateStr, person);
+              refreshTurnosViews();
+              selectCalDay(dateStr);
+            });
+          }
+          var resetBtn = document.getElementById("calTurnoResetBtn");
+          if (resetBtn) {
+            resetBtn.addEventListener("click", function () {
+              var panel = document.getElementById("calTurnoPanel");
+              var dateStr = panel && panel.dataset.date;
+              if (!dateStr) return;
+              setTurnoOverride(dateStr, null);
+              refreshTurnosViews();
+              selectCalDay(dateStr);
+            });
+          }
           renderCalendar();
         }
 
         // ——— Turnos ———
+        function getTurnoOverrides() {
+          return loadJSON(STORAGE_KEYS.turnoOverrides, {});
+        }
+        function saveTurnoOverrides(map) {
+          saveJSON(STORAGE_KEYS.turnoOverrides, map || {});
+        }
+        function setTurnoOverride(dateStr, person) {
+          var map = getTurnoOverrides();
+          if (!person) delete map[dateStr];
+          else map[dateStr] = person;
+          saveTurnoOverrides(map);
+        }
+        function clearTurnoOverridesForYear(year) {
+          var map = getTurnoOverrides();
+          var prefix = String(year) + "-";
+          Object.keys(map).forEach(function (k) {
+            if (k.indexOf(prefix) === 0) delete map[k];
+          });
+          saveTurnoOverrides(map);
+        }
+        function applyPersonOverride(dateStr, person, autoPerson) {
+          if (autoPerson && person === autoPerson) setTurnoOverride(dateStr, null);
+          else setTurnoOverride(dateStr, person);
+        }
+        function swapTurnoPerson(dateStr, newPerson) {
+          if (!dateStr || !newPerson) return;
+          var d = parseYmd(dateStr);
+          if (!d) return;
+          var year = d.getFullYear();
+          var base = assignSaturdays(year, getRoster());
+          var current = getAssignmentsForYear(year);
+          var cur = null;
+          var i;
+          for (i = 0; i < current.length; i++) {
+            if (current[i].date === dateStr) {
+              cur = current[i];
+              break;
+            }
+          }
+          if (!cur || cur.person === newPerson) return;
+          var oldPerson = cur.person;
+          var other = null;
+          for (i = 0; i < current.length; i++) {
+            if (current[i].date !== dateStr && current[i].person === newPerson) {
+              other = current[i];
+              break;
+            }
+          }
+          var baseCur = null;
+          var baseOther = null;
+          for (i = 0; i < base.length; i++) {
+            if (base[i].date === dateStr) baseCur = base[i];
+            if (other && base[i].date === other.date) baseOther = base[i];
+          }
+          applyPersonOverride(dateStr, newPerson, baseCur && baseCur.person);
+          if (other) {
+            applyPersonOverride(other.date, oldPerson, baseOther && baseOther.person);
+          }
+        }
+
         function isOnVacation(vendor, dateStr) {
           return getVacations().some(function (v) {
             if (v.vendor !== vendor) return false;
@@ -2392,7 +2684,7 @@
           var idx = 0;
           return sats.map(function (dateStr) {
             if (!roster.length) {
-              return { date: dateStr, person: null, conflict: false, note: "Sin roster" };
+              return { date: dateStr, person: null, conflict: false, note: "Sin roster", swapped: false };
             }
             var tries = 0;
             var person = null;
@@ -2415,7 +2707,53 @@
               conflict = true;
               note = "Todos en vacaciones; se asignó igual a " + person;
             }
-            return { date: dateStr, person: person, conflict: conflict, note: note };
+            return { date: dateStr, person: person, conflict: conflict, note: note, swapped: false };
+          });
+        }
+
+        function getAssignmentsForYear(year) {
+          var base = assignSaturdays(year, getRoster());
+          var overrides = getTurnoOverrides();
+          return base.map(function (a) {
+            if (overrides[a.date]) {
+              return {
+                date: a.date,
+                person: overrides[a.date],
+                conflict: a.conflict,
+                note: a.note,
+                swapped: true,
+                autoPerson: a.person,
+              };
+            }
+            return a;
+          });
+        }
+
+        function getAssignmentMapForYears(years) {
+          var map = {};
+          (years || []).forEach(function (y) {
+            getAssignmentsForYear(y).forEach(function (a) {
+              map[a.date] = a;
+            });
+          });
+          return map;
+        }
+
+        function refreshTurnosViews() {
+          renderTurnos();
+          renderCalendar();
+        }
+
+        function fillTurnoSwapSelect(selectEl, selected) {
+          if (!selectEl) return;
+          var roster = getRoster();
+          selectEl.innerHTML = "";
+          roster.forEach(function (v) {
+            var opt = document.createElement("option");
+            opt.value = v.name;
+            opt.textContent = v.name;
+            if (v.name === selected) opt.selected = true;
+            selectEl.appendChild(opt);
           });
         }
 
@@ -2440,17 +2778,17 @@
               if (i === 0) return;
               var r = getRoster();
               var tmp = r[i - 1]; r[i - 1] = r[i]; r[i] = tmp;
-              setRoster(r); renderTurnos();
+              setRoster(r); refreshTurnosViews();
             });
             li.querySelector("[data-down]").addEventListener("click", function () {
               var r = getRoster();
               if (i >= r.length - 1) return;
               var tmp = r[i + 1]; r[i + 1] = r[i]; r[i] = tmp;
-              setRoster(r); renderTurnos();
+              setRoster(r); refreshTurnosViews();
             });
             li.querySelector("[data-del]").addEventListener("click", function () {
               var r = getRoster().filter(function (_, j) { return j !== i; });
-              setRoster(r); renderVendorSelect(); renderTurnos();
+              setRoster(r); renderVendorSelect(); refreshTurnosViews();
             });
             ul.appendChild(li);
           });
@@ -2464,10 +2802,14 @@
           var box = document.getElementById("turnosSaturdays");
           if (!box) return;
           box.innerHTML = "";
-          var assignments = assignSaturdays(year, getRoster());
+          var assignments = getAssignmentsForYear(year);
+          var roster = getRoster();
           assignments.forEach(function (a) {
             var card = document.createElement("div");
-            card.className = "sat-card" + (a.conflict ? " conflict" : "");
+            card.className =
+              "sat-card" +
+              (a.conflict ? " conflict" : "") +
+              (a.swapped ? " swapped" : "");
             var d = parseYmd(a.date);
             var dateLabel = d
               ? d.toLocaleDateString("es", { day: "2-digit", month: "short" })
@@ -2475,12 +2817,22 @@
             card.innerHTML =
               '<div class="sat-date"></div>' +
               '<div class="sat-person"></div>' +
+              '<div class="sat-swap"><label style="font-size:0.68rem;color:var(--muted)">Intercambiar</label><select></select></div>' +
               (a.note ? '<div class="sat-alert"></div>' : "");
-            card.querySelector(".sat-date").textContent = dateLabel + " · sáb";
+            card.querySelector(".sat-date").textContent =
+              dateLabel + " · sáb" + (a.swapped ? " · manual" : "");
             var personEl = card.querySelector(".sat-person");
             personEl.style.background = vendorColor(a.person || "");
             personEl.textContent = a.person || "—";
             if (a.note) card.querySelector(".sat-alert").textContent = a.note;
+            var sel = card.querySelector("select");
+            fillTurnoSwapSelect(sel, a.person);
+            sel.addEventListener("change", function () {
+              var next = sel.value;
+              if (!next || next === a.person) return;
+              swapTurnoPerson(a.date, next);
+              refreshTurnosViews();
+            });
             box.appendChild(card);
           });
         }
@@ -2500,12 +2852,18 @@
               setRoster(r);
               document.getElementById("turnosNewName").value = "";
               renderVendorSelect();
-              renderTurnos();
+              refreshTurnosViews();
             });
           }
           var rebuild = document.getElementById("turnosRebuildBtn");
-          if (rebuild) rebuild.addEventListener("click", renderTurnos);
-          if (yearInp) yearInp.addEventListener("change", renderTurnos);
+          if (rebuild) {
+            rebuild.addEventListener("click", function () {
+              var y = yearInp && yearInp.value ? Number(yearInp.value) : new Date().getFullYear();
+              clearTurnoOverridesForYear(y);
+              refreshTurnosViews();
+            });
+          }
+          if (yearInp) yearInp.addEventListener("change", refreshTurnosViews);
           renderTurnos();
         }
 
@@ -2531,6 +2889,7 @@
 
         initTabs();
         ensureRosterPersisted();
+        initDispoOptions();
         initPromociones();
         initCalendario();
         initTurnos();
@@ -2564,6 +2923,7 @@
           var cajasKey = findKey(sample, ["# cajas", "cajas"]);
           var largoKey = findKey(sample, ["largo", "longitud", "cm"]);
           var variedadKey = findKey(sample, ["variedad"]);
+          var colorKey = findKey(sample, ["color", "colour", "color flor", "colores"]);
 
           if (!tipoFlorKey || !cajasKey || !largoKey || !variedadKey) {
             throw new Error(
@@ -2584,13 +2944,16 @@
             var variedad = String(
               r[variedadKey] == null ? "" : r[variedadKey],
             ).trim();
+            var color = colorKey
+              ? String(r[colorKey] == null ? "" : r[colorKey]).trim()
+              : "";
             var rawCajas = String(r[cajasKey] == null ? "" : r[cajasKey]);
             var m = rawCajas.match(/-?\d+/);
             var cajas = m ? parseInt(m[0], 10) : 0;
             if (isNaN(cajas)) cajas = 0;
             if (cajas > 6) cajas = 6;
 
-            return { tipoFlor, cajas, grado, largo, variedad };
+            return { tipoFlor, cajas, grado, largo, variedad, color };
           });
 
           var groupsMap = new Map();
@@ -2638,6 +3001,7 @@
                 grado: r.grado,
                 largo: r.largo,
                 variedad: r.variedad,
+                color: r.color || "",
                 isTitle: false,
               });
             });
@@ -2676,6 +3040,7 @@
             grado: "QB",
             largo: "120 cm",
             variedad: "SMILAX GARLAND",
+            color: "",
             isTitle: false,
           });
         }
@@ -2705,9 +3070,37 @@
           rows.unshift({ tipoFlor: "Agrogana", isTitle: true });
         }
 
+        function buildOutputRowCells(r) {
+          var cells = [
+            r.cajas == null ? "" : r.cajas,
+            r.grado == null ? "" : r.grado,
+            r.largo == null ? "" : r.largo,
+            r.variedad == null ? "" : r.variedad,
+          ];
+          if (optColorEnabled) {
+            cells.push(r.color == null ? "" : r.color);
+          }
+          if (pricesActive()) {
+            cells.push(r.precio == null ? "" : r.precio);
+          }
+          return cells;
+        }
+
+        function buildOutputHeaders() {
+          var headers = ["# Cajas", "Grado", "Largo", "Variedad"];
+          if (optColorEnabled) headers.push("Color");
+          if (pricesActive()) headers.push("Precio");
+          return headers;
+        }
+
+        function emptyOutputPad() {
+          return buildOutputHeaders().map(function () {
+            return "";
+          });
+        }
+
         function rowsToTsvNoHeader(rows) {
           if (!rows || !rows.length) return "";
-          var withPrice = pricesFileActive;
           var lines = [];
           rows.forEach(function (r) {
             if (r.isSeparator) {
@@ -2715,43 +3108,30 @@
             } else if (r.isTitle) {
               lines.push(r.tipoFlor || "");
             } else {
-              var c = r.cajas == null ? "" : String(r.cajas);
-              var g = r.grado == null ? "" : String(r.grado);
-              var l = r.largo == null ? "" : String(r.largo);
-              var v = r.variedad == null ? "" : String(r.variedad);
-              if (withPrice) {
-                var p = r.precio == null ? "" : String(r.precio);
-                lines.push([c, g, l, v, p].join("\t"));
-              } else {
-                lines.push([c, g, l, v].join("\t"));
-              }
+              lines.push(
+                buildOutputRowCells(r)
+                  .map(function (c) {
+                    return c == null ? "" : String(c);
+                  })
+                  .join("\t"),
+              );
             }
           });
           return lines.join("\n");
         }
 
         function buildWorkbook(rows) {
-          var withPrice = pricesFileActive;
           var data = [];
-          data.push(
-            withPrice
-              ? ["# Cajas", "Grado", "Largo", "Variedad", "Precio"]
-              : ["# Cajas", "Grado", "Largo", "Variedad"],
-          );
+          data.push(buildOutputHeaders());
           rows.forEach(function (r) {
             if (r.isTitle) {
-              data.push(withPrice ? [r.tipoFlor || "", "", "", "", ""] : [r.tipoFlor || "", "", "", ""]);
+              var titleRow = emptyOutputPad();
+              titleRow[0] = r.tipoFlor || "";
+              data.push(titleRow);
             } else if (r.isSeparator) {
-              data.push(withPrice ? ["", "", "", "", ""] : ["", "", "", ""]);
+              data.push(emptyOutputPad());
             } else {
-              var row = [
-                r.cajas == null ? "" : r.cajas,
-                r.grado == null ? "" : r.grado,
-                r.largo == null ? "" : r.largo,
-                r.variedad == null ? "" : r.variedad,
-              ];
-              if (withPrice) row.push(r.precio == null ? "" : r.precio);
-              data.push(row);
+              data.push(buildOutputRowCells(r));
             }
           });
           var ws = XLSX.utils.aoa_to_sheet(data);
