@@ -1263,6 +1263,8 @@
       crossorigin="anonymous"
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="species-data.js"></script>
+    <script src="default-prices-data.js"></script>
     <script>
       (function () {
         // Evitar que el navegador abra el archivo al soltarlo fuera de las zonas
@@ -1500,10 +1502,15 @@
         // ——— Maestro de precios (panel Precios) ———
         var priceMaster = []; // archivo adicional subido [{ name, price, lengthCm }]
         var defaultPriceMaster = []; // lista default embebida
+        var defaultPriceIndex = null; // Map nombre → [{lengthCm, price}]
+        var userPriceIndex = null;
         var hasUserPriceFile = false;
         var pricesFileObj = null;
         var optColorEnabled = false;
         var optPricesEnabled = false;
+        var speciesMap = {}; // variedad → especie
+        var speciesNames = []; // lista de especies para prefijo
+        var speciesDisplay = { ROSES: "ROSAS" };
         var COLOR_TOKENS = [
           "sky blue",
           "light pink",
@@ -1575,8 +1582,14 @@
           return isNaN(n) ? null : Math.round(n);
         }
 
-        function normalizeVarietyKey(name) {
+        function canonicalizeVarietyTypos(name) {
           return String(name || "")
+            .replace(/\bfourtaint\b/gi, "fountain")
+            .replace(/\bfourtain\b/gi, "fountain");
+        }
+
+        function normalizeVarietyKey(name) {
+          return canonicalizeVarietyTypos(name)
             .trim()
             .replace(/\s+/g, " ")
             .toLowerCase()
@@ -1749,6 +1762,76 @@
           return anyName;
         }
 
+        function buildPriceIndex(list) {
+          var idx = Object.create(null);
+          if (!list || !list.length) return idx;
+          function addEntry(key, entry) {
+            if (!key) return;
+            if (!idx[key]) idx[key] = [];
+            idx[key].push(entry);
+          }
+          for (var i = 0; i < list.length; i++) {
+            var item = list[i];
+            if (!item || !item.name) continue;
+            var entry = {
+              lengthCm: item.lengthCm != null ? item.lengthCm : null,
+              price: item.price,
+            };
+            // Indexar también sin prefijos (PK, Y, etc.) para match bidireccional
+            var keys = priceNameCandidates(item.name);
+            for (var k = 0; k < keys.length; k++) {
+              addEntry(keys[k], entry);
+            }
+          }
+          return idx;
+        }
+
+        function priceNameCandidates(variedad) {
+          var n = normalizeVarietyKey(variedad);
+          if (!n) return [];
+          var out = [];
+          var seen = {};
+          function add(x) {
+            if (!x || seen[x]) return;
+            seen[x] = true;
+            out.push(x);
+          }
+          add(n);
+          add(normalizeVarietyKey(stripShortLetterSuffix(variedad)));
+          // Quitar 1–2 letras/prefijos al inicio: "Y …", "PK …"
+          add(n.replace(/^[a-z]{1,2}\s+/, ""));
+          add(n.replace(/^pk\s+/, ""));
+          var parts = n.split(" ");
+          if (parts.length > 1 && parts[0].length <= 2) {
+            add(parts.slice(1).join(" "));
+          }
+          if (parts.length > 1 && parts[0].length <= 3) {
+            add(parts.slice(1).join(" "));
+          }
+          // Añadir prefijo PK para el caso inverso: LARKSPUR PURPLE ↔ PK LARKSPUR PURPLE
+          if (n.indexOf("pk ") !== 0) {
+            add("pk " + n);
+          }
+          return out;
+        }
+
+        function lookupPriceFast(index, variedad, lengthCm) {
+          if (!index || !variedad) return null;
+          var candidates = priceNameCandidates(variedad);
+          var i;
+          for (i = 0; i < candidates.length; i++) {
+            var entries = index[candidates[i]];
+            if (!entries || !entries.length) continue;
+            var j;
+            if (lengthCm != null) {
+              for (j = 0; j < entries.length; j++) {
+                if (entries[j].lengthCm === lengthCm) return entries[j].price;
+              }
+            }
+          }
+          return null;
+        }
+
         function pricesActive() {
           return hasUserPriceFile || optPricesEnabled;
         }
@@ -1757,17 +1840,35 @@
           if (!variedad) return "";
           if (!pricesActive()) return "";
           var nameKey = normalizeVarietyKey(variedad);
-          if (nameKey === "smilax garland" || nameKey.indexOf("smilax garland") !== -1) {
+          if (
+            nameKey === "smilax garland" ||
+            nameKey.indexOf("smilax garland") !== -1
+          ) {
             return formatPriceOut(3.5);
           }
           var lengthCm = parseLengthCm(largo);
-          if (hasUserPriceFile && priceMaster.length) {
-            var fromUser = lookupInList(priceMaster, variedad, lengthCm);
+          // Archivo adicional tiene prioridad
+          if (hasUserPriceFile && userPriceIndex) {
+            var fromUser = lookupPriceFast(userPriceIndex, variedad, lengthCm);
             if (fromUser != null) return formatPriceOut(fromUser);
+            // si casilla Precios activa, intentar default
+            if (optPricesEnabled && defaultPriceIndex) {
+              var fromDefAfter = lookupPriceFast(
+                defaultPriceIndex,
+                variedad,
+                lengthCm,
+              );
+              if (fromDefAfter != null) return formatPriceOut(fromDefAfter);
+            }
             return "";
           }
-          if (optPricesEnabled && defaultPriceMaster.length) {
-            var fromDefault = lookupInList(defaultPriceMaster, variedad, lengthCm);
+          // Casilla Precios → columna precio de default - copia.xlsx
+          if (optPricesEnabled && defaultPriceIndex) {
+            var fromDefault = lookupPriceFast(
+              defaultPriceIndex,
+              variedad,
+              lengthCm,
+            );
             if (fromDefault != null) return formatPriceOut(fromDefault);
           }
           return "";
@@ -1850,6 +1951,7 @@
               priceMaster = buildPriceMasterFromRows(rows);
               if (!priceMaster.length) {
                 hasUserPriceFile = false;
+                userPriceIndex = null;
                 updatePricesUI(
                   file,
                   0,
@@ -1858,12 +1960,14 @@
                 return;
               }
               hasUserPriceFile = true;
+              userPriceIndex = buildPriceIndex(priceMaster);
               updatePricesUI(file, priceMaster.length);
               AppState.priceMaster = priceMaster;
             })
             .catch(function (err) {
               priceMaster = [];
               hasUserPriceFile = false;
+              userPriceIndex = null;
               updatePricesUI(
                 file,
                 0,
@@ -1872,39 +1976,243 @@
             });
         }
 
+        function applyDefaultPricesData(data) {
+          if (!Array.isArray(data)) return;
+          defaultPriceMaster = data
+            .map(function (d) {
+              return {
+                name: d.name,
+                price: Number(d.price),
+                lengthCm:
+                  d.lengthCm != null ? d.lengthCm : parseLengthCm(d.length),
+              };
+            })
+            .filter(function (d) {
+              return d.name && !isNaN(d.price);
+            });
+          defaultPriceIndex = buildPriceIndex(defaultPriceMaster);
+        }
+
         function loadDefaultPriceGuide() {
+          if (typeof window !== "undefined" && window.__DEFAULT_PRICES__) {
+            applyDefaultPricesData(window.__DEFAULT_PRICES__);
+            return Promise.resolve();
+          }
           return fetch("default-prices.json")
             .then(function (res) {
               if (!res.ok) throw new Error("HTTP " + res.status);
               return res.json();
             })
             .then(function (data) {
-              if (!Array.isArray(data)) return;
-              defaultPriceMaster = data
-                .map(function (d) {
-                  return {
-                    name: d.name,
-                    price: Number(d.price),
-                    lengthCm:
-                      d.lengthCm != null
-                        ? d.lengthCm
-                        : parseLengthCm(d.length),
-                  };
-                })
-                .filter(function (d) {
-                  return d.name && !isNaN(d.price);
-                });
+              applyDefaultPricesData(data);
             })
             .catch(function () {
               defaultPriceMaster = [];
+              defaultPriceIndex = null;
             });
+        }
+
+        function applySpeciesData(data) {
+          if (!data) return;
+          speciesMap = (data && data.map) || {};
+          speciesNames = ((data && data.species) || []).slice().sort(function (a, b) {
+            return b.length - a.length;
+          });
+          speciesDisplay = Object.assign(
+            {
+              ROSES: "ROSAS",
+              ASTROMELIA: "ALSTROMELIA",
+              AMARANTHUS: "AMARANTO",
+              ANEMONE: "ANEMONAS",
+              GERBERA: "GERBERAS",
+              "SWEET PEA": "LATHYRUS",
+              DUBIUM: "ORNITHOGALUM",
+              POPPY: "PAPAVER NUDICALE",
+              "SPRAY ROSE": "SPRAY ROSAS",
+            },
+            (data && data.display) || {},
+          );
+        }
+
+        function loadSpeciesMap() {
+          if (typeof window !== "undefined" && window.__SPECIES_MAP__) {
+            applySpeciesData(window.__SPECIES_MAP__);
+            return Promise.resolve();
+          }
+          return fetch("species-map.json")
+            .then(function (res) {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.json();
+            })
+            .then(function (data) {
+              applySpeciesData(data);
+            })
+            .catch(function () {
+              speciesMap = {};
+              speciesNames = [];
+            });
+        }
+
+        function ensureSpeciesMapLoaded() {
+          if (speciesNames.length) return Promise.resolve();
+          return loadSpeciesMap();
+        }
+
+        function normalizeSpeciesKey(name) {
+          return canonicalizeVarietyTypos(name)
+            .trim()
+            .replace(/\s+/g, " ")
+            .toUpperCase();
+        }
+
+        function displaySpeciesName(raw) {
+          var key = normalizeSpeciesKey(raw);
+          if (speciesDisplay[key]) return speciesDisplay[key];
+          return key;
+        }
+
+        function resolveSpeciesFromVariety(variedad) {
+          var key = normalizeSpeciesKey(variedad);
+          if (!key) return "OTROS";
+
+          // 1) Match exacto contra el archivo default (prioridad absoluta)
+          if (speciesMap[key]) return displaySpeciesName(speciesMap[key]);
+
+          function tryResolve(k) {
+            if (!k) return null;
+            if (speciesMap[k]) return displaySpeciesName(speciesMap[k]);
+            for (var i = 0; i < speciesNames.length; i++) {
+              var sp = speciesNames[i];
+              if (!sp) continue;
+              if (k === sp || k.indexOf(sp + " ") === 0) {
+                return displaySpeciesName(sp);
+              }
+            }
+            return null;
+          }
+
+          var cleaned = key
+            .replace(/^PK\s+/, "")
+            .replace(/\b(OR|OT|AND|&)\b/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          if (/^LIRIO\b/.test(cleaned) && !/^LIRIOS\b/.test(cleaned)) {
+            cleaned = cleaned.replace(/^LIRIO\b/, "LIRIOS");
+          }
+
+          var candidates = [cleaned];
+          if (/^LIRIOS?\b/.test(key)) {
+            candidates.push(
+              key
+                .replace(/^LIRIO\b/, "LIRIOS")
+                .replace(/\b(OR|OT)\b/g, " ")
+                .replace(/\s+/g, " ")
+                .trim(),
+            );
+            candidates.push(cleaned.replace(/^LIRIOS\b/, "LIRIO"));
+          }
+
+          var i;
+          for (i = 0; i < candidates.length; i++) {
+            if (candidates[i] === key) continue;
+            var hit = tryResolve(candidates[i]);
+            if (hit) return hit;
+          }
+          // Prefijo de especie (AMARANTHUS ..., SWEET PEA ...)
+          hit = tryResolve(key);
+          if (hit) return hit;
+          hit = tryResolve(cleaned);
+          if (hit) return hit;
+
+          if (/^LIRIOS?\b/.test(key)) return "LIRIOS";
+          if (/^PON\s+PON\b/.test(key)) return displaySpeciesName("RANUNCULUS");
+          if (/^FIORINO\b/.test(key)) return displaySpeciesName("DIANTHUS");
+          if (/^SUCCESS\b/.test(key)) return displaySpeciesName("RANUNCULUS");
+          if (/^LARKSPUR\b/.test(cleaned)) return displaySpeciesName("LARKSPUR");
+          if (/^BUTTERFLY\b/.test(key) || /^ELEGANCE\b/.test(key)) {
+            return displaySpeciesName("RANUNCULUS");
+          }
+
+          // Mejor coincidencia por tokens (solo si hay buen solape)
+          var tokens = cleaned.split(" ").filter(function (t) {
+            return t.length > 1;
+          });
+          var best = null;
+          var bestScore = 0;
+          Object.keys(speciesMap).forEach(function (vName) {
+            var vTok = vName.split(" ");
+            var shared = 0;
+            tokens.forEach(function (t) {
+              if (vTok.indexOf(t) !== -1) shared++;
+            });
+            if (shared < 2) return;
+            if (vTok[0] !== tokens[0]) return; // mismo inicio de nombre
+            var score = shared * 10 + (vName.indexOf(cleaned) === 0 ? 8 : 0);
+            if (score > bestScore) {
+              bestScore = score;
+              best = speciesMap[vName];
+            }
+          });
+          if (best && bestScore >= 20) return displaySpeciesName(best);
+
+          return "OTROS";
+        }
+
+        function normalizeGradoOut(grado, flatFormat) {
+          var g = String(grado || "").trim().toUpperCase();
+          if (!g) return "";
+          // EB-N, EB-N1, EB - N, etc. → solo EB
+          if (/^EB[\s\-]*N\b/.test(g) || g.indexOf("EB-N") === 0 || g === "EB-N") {
+            return "EB";
+          }
+          g = g.replace(/\s+/g, "");
+          if (!flatFormat) {
+            if (/^EB[\-]?N/.test(g)) return "EB";
+            return g;
+          }
+          if (g === "QB" || g === "Q") return "Q";
+          if (/^EB[\-]?N/.test(g)) return "EB";
+          if (g === "EB" || g === "E" || g === "HB" || g === "H") return "E";
+          if (g === "FB" || g === "F") return "F";
+          return g;
+        }
+
+        function normalizeLargoOut(largoRaw, flatFormat) {
+          var largo = String(largoRaw == null ? "" : largoRaw).trim();
+          if (!largo) return "";
+          if (flatFormat) {
+            var m = largo.match(/(\d+)/);
+            return m ? m[1] : largo.replace(/\s*cm\s*/i, "").trim();
+          }
+          if (!/cm/i.test(largo) && /^\d+([.,]\d+)?$/.test(largo)) {
+            return largo + " cm";
+          }
+          return largo;
+        }
+
+        function isFlatDisponibilidadFormat(sample) {
+          var tipoFlorKey = findKey(sample, ["tipo flor"]);
+          if (tipoFlorKey) return false;
+          var variedadKey = findKey(sample, [
+            "nombre variedad",
+            "variedad",
+            "variety",
+          ]);
+          var cajasKey = findKey(sample, [
+            "cajas disponibles",
+            "# cajas",
+            "cajas",
+          ]);
+          var largoKey = findKey(sample, ["largo (cm)", "largo", "longitud", "cm"]);
+          return !!(variedadKey && cajasKey && largoKey);
         }
 
         function initDispoOptions() {
           var colorCb = document.getElementById("optColor");
           var pricesCb = document.getElementById("optPrices");
           optColorEnabled = loadJSON("dispo-ag-opt-color", false) === true;
-          optPricesEnabled = loadJSON("dispo-ag-opt-prices", false) === true;
+          // Precios siempre inicia desactivada
+          optPricesEnabled = false;
           if (colorCb) {
             colorCb.checked = optColorEnabled;
             colorCb.addEventListener("change", function () {
@@ -1913,10 +2221,9 @@
             });
           }
           if (pricesCb) {
-            pricesCb.checked = optPricesEnabled;
+            pricesCb.checked = false;
             pricesCb.addEventListener("change", function () {
               optPricesEnabled = !!pricesCb.checked;
-              saveJSON("dispo-ag-opt-prices", optPricesEnabled);
               updatePricesUI(pricesFileObj, priceMaster.length);
             });
           }
@@ -1926,6 +2233,15 @@
           var input = document.getElementById("pricesFile");
           var drop = document.getElementById("pricesDrop");
           loadDefaultPriceGuide();
+          // Cargar mapa embebido de inmediato (no depende de fetch)
+          if (typeof window !== "undefined" && window.__SPECIES_MAP__) {
+            applySpeciesData(window.__SPECIES_MAP__);
+          } else {
+            loadSpeciesMap();
+          }
+          if (typeof window !== "undefined" && window.__DEFAULT_PRICES__) {
+            applyDefaultPricesData(window.__DEFAULT_PRICES__);
+          }
           if (!input || !drop) return;
           input.addEventListener("change", function () {
             var f = input.files && input.files[0];
@@ -2900,7 +3216,7 @@
         }
 
         function normalizeVariedad(name) {
-          return String(name || "")
+          return canonicalizeVarietyTypos(name)
             .trim()
             .replace(/\s+/g, " ")
             .toUpperCase();
@@ -2917,44 +3233,102 @@
             throw new Error("No se encontraron filas en los Excel.");
 
           var sample = allRows[0] || {};
+          var flatFormat = isFlatDisponibilidadFormat(sample);
 
           var tipoFlorKey = findKey(sample, ["tipo flor"]);
           var gradoKey = findKey(sample, ["grado", "tipo"]);
-          var cajasKey = findKey(sample, ["# cajas", "cajas"]);
-          var largoKey = findKey(sample, ["largo", "longitud", "cm"]);
-          var variedadKey = findKey(sample, ["variedad"]);
-          var colorKey = findKey(sample, ["color", "colour", "color flor", "colores"]);
+          var cajasKey = findKey(sample, [
+            "cajas disponibles",
+            "# cajas",
+            "cajas",
+          ]);
+          var largoKey = findKey(sample, [
+            "largo (cm)",
+            "largo",
+            "longitud",
+            "cm",
+          ]);
+          var variedadKey = findKey(sample, [
+            "nombre variedad",
+            "variedad",
+            "variety",
+          ]);
+          var colorKey = findKey(sample, [
+            "color",
+            "colour",
+            "color flor",
+            "colores",
+          ]);
+          var precioKey = findKey(sample, [
+            "precio x tallo",
+            "precio",
+            "price",
+            "farm price",
+          ]);
 
-          if (!tipoFlorKey || !cajasKey || !largoKey || !variedadKey) {
+          if (flatFormat) {
+            if (!cajasKey || !largoKey || !variedadKey) {
+              throw new Error(
+                "Formato plano: no se detectaron Nombre Variedad / Cajas Disponibles / Largo.",
+              );
+            }
+          } else if (!tipoFlorKey || !cajasKey || !largoKey || !variedadKey) {
             throw new Error(
               "No se pudieron detectar correctamente las columnas Tipo flor / # Cajas / Largo / Variedad.",
             );
           }
 
+          // En formato plano, "Tipo" es grado (QB/EB), no especie
+          if (flatFormat && gradoKey && normalizeName(gradoKey) === "tipo flor") {
+            gradoKey = findKey(sample, ["grado", "tipo"]);
+          }
+
           clampCajas(allRows, cajasKey);
 
-          var normRows = allRows.map(function (r) {
-            var tipoFlor = String(
-              r[tipoFlorKey] == null ? "" : r[tipoFlorKey],
-            ).trim();
-            var grado = gradoKey
-              ? String(r[gradoKey] == null ? "" : r[gradoKey]).trim()
-              : "";
-            var largo = String(r[largoKey] == null ? "" : r[largoKey]).trim();
-            var variedad = String(
-              r[variedadKey] == null ? "" : r[variedadKey],
-            ).trim();
-            var color = colorKey
-              ? String(r[colorKey] == null ? "" : r[colorKey]).trim()
-              : "";
-            var rawCajas = String(r[cajasKey] == null ? "" : r[cajasKey]);
-            var m = rawCajas.match(/-?\d+/);
-            var cajas = m ? parseInt(m[0], 10) : 0;
-            if (isNaN(cajas)) cajas = 0;
-            if (cajas > 6) cajas = 6;
+          var normRows = allRows
+            .map(function (r) {
+              var variedad = String(
+                r[variedadKey] == null ? "" : r[variedadKey],
+              ).trim();
+              var grado = normalizeGradoOut(
+                gradoKey ? String(r[gradoKey] == null ? "" : r[gradoKey]).trim() : "",
+                flatFormat,
+              );
+              var largo = normalizeLargoOut(
+                r[largoKey] == null ? "" : r[largoKey],
+                flatFormat,
+              );
+              var color = colorKey
+                ? String(r[colorKey] == null ? "" : r[colorKey]).trim()
+                : "";
+              var sourcePrice =
+                precioKey && r[precioKey] != null && r[precioKey] !== ""
+                  ? r[precioKey]
+                  : "";
+              var rawCajas = String(r[cajasKey] == null ? "" : r[cajasKey]);
+              var m = rawCajas.match(/-?\d+/);
+              var cajas = m ? parseInt(m[0], 10) : 0;
+              if (isNaN(cajas)) cajas = 0;
+              if (cajas > 6) cajas = 6;
 
-            return { tipoFlor, cajas, grado, largo, variedad, color };
-          });
+              var tipoFlor = flatFormat
+                ? resolveSpeciesFromVariety(variedad)
+                : String(r[tipoFlorKey] == null ? "" : r[tipoFlorKey]).trim();
+              if (!flatFormat) tipoFlor = displaySpeciesName(tipoFlor);
+
+              return {
+                tipoFlor: tipoFlor,
+                cajas: cajas,
+                grado: grado,
+                largo: largo,
+                variedad: variedad,
+                color: color,
+                sourcePrice: sourcePrice,
+              };
+            })
+            .filter(function (r) {
+              return r.variedad;
+            });
 
           var groupsMap = new Map();
           normRows.forEach(function (r) {
@@ -2965,8 +3339,10 @@
 
           function orderTipo(t) {
             var name = normalizeSpecies(t);
-            if (name === "ROSAS") return [0, name];
-            return [1, name];
+            if (name === "ROSAS" || name === "ROSES") return [0, "ROSAS"];
+            if (name === "SPRAY ROSAS" || name === "SPRAY ROSE") return [1, name];
+            if (name === "OTROS") return [3, name];
+            return [2, name];
           }
 
           var tipos = Array.from(groupsMap.keys());
@@ -2984,7 +3360,6 @@
               var nb = normalizeVariedad(b.variedad);
               var byVariedad = na.localeCompare(nb, "es", { sensitivity: "base" });
               if (byVariedad !== 0) return byVariedad;
-
               return largoSortKey(a.largo) - largoSortKey(b.largo);
             });
           });
@@ -2993,15 +3368,18 @@
           tipos.forEach(function (tipo, idx) {
             var rows = groupsMap.get(tipo);
             if (!rows || !rows.length) return;
-            output.push({ tipoFlor: tipo, isTitle: true });
+            var titleName = displaySpeciesName(tipo);
+            if (normalizeSpecies(titleName) === "ROSES") titleName = "ROSAS";
+            output.push({ tipoFlor: titleName, isTitle: true });
             rows.forEach(function (r) {
               output.push({
-                tipoFlor: tipo,
+                tipoFlor: titleName,
                 cajas: r.cajas,
                 grado: r.grado,
                 largo: r.largo,
                 variedad: r.variedad,
                 color: r.color || "",
+                sourcePrice: r.sourcePrice,
                 isTitle: false,
               });
             });
@@ -3158,7 +3536,10 @@
             submitBtn.disabled = true;
             submitBtn.textContent = "Procesando…";
 
-            Promise.all(files.map(readSheetFromFile))
+            ensureSpeciesMapLoaded()
+              .then(function () {
+                return Promise.all(files.map(readSheetFromFile));
+              })
               .then(function (results) {
                 var allRows = [].concat.apply([], results);
                 var topVarieties = computeTopN(allRows, 5);
