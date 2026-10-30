@@ -1392,7 +1392,7 @@
       integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
       crossorigin="anonymous"
     ></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
     <script src="species-data.js?v=20261029a"></script>
     <script src="default-prices-data.js?v=20260921b"></script>
     <script>
@@ -1435,7 +1435,7 @@
         var submitBtn = document.getElementById("submitBtn");
         var fileReminder = document.getElementById("fileReminder");
         var excelWorkbook = null;
-        var finalHeaders = ["#", "BOX TYPE", "VARIETY"];
+        var finalHeaders = ["QUANTITY", "BOX TYPE", "LENGTH", "VARIETY"];
         var droppedFiles = [null, null, null, null, null];
 
         function showMessage(text, type) {
@@ -4031,7 +4031,7 @@
         }
 
         function buildExcelHeaders() {
-          var headers = ["#", "BOX TYPE", "LENGTH", "VARIETY"];
+          var headers = ["QUANTITY", "BOX TYPE", "LENGTH", "VARIETY"];
           if (optColorEnabled) headers.push("COLOR");
           if (pricesActive()) headers.push("PRICE PER STEM");
           return headers;
@@ -4080,10 +4080,33 @@
           return lines.join("\n");
         }
 
+        function excelColLetter(idx) {
+          var s = "";
+          var n = idx + 1;
+          while (n > 0) {
+            var m = (n - 1) % 26;
+            s = String.fromCharCode(65 + m) + s;
+            n = Math.floor((n - 1) / 26);
+          }
+          return s;
+        }
+
+        function isExcelMetaTitle(r) {
+          if (!r || !r.isTitle) return false;
+          var t = String(r.tipoFlor || "").trim().toUpperCase();
+          if (t === "AGROGANA") return true;
+          return /^\d{2}\/\d{2}\/\d{4}$/.test(t);
+        }
+
         function buildWorkbook(rows) {
+          var headers = buildExcelHeaders();
           var data = [];
-          data.push(buildExcelHeaders());
-          rows.forEach(function (r) {
+          var agroganaRow = emptyOutputPad();
+          agroganaRow[0] = "AGROGANA";
+          data.push(agroganaRow);
+          data.push(headers);
+          (rows || []).forEach(function (r) {
+            if (isExcelMetaTitle(r)) return;
             if (r.isTitle) {
               var titleRow = emptyOutputPad();
               titleRow[0] = r.tipoFlor || "";
@@ -4095,6 +4118,16 @@
             }
           });
           var ws = XLSX.utils.aoa_to_sheet(data);
+          var headerStyle = {
+            fill: { patternType: "solid", fgColor: { rgb: "4A4A4A" } },
+            font: { name: "Calibri", sz: 11, color: { rgb: "FFFFFF" }, bold: true },
+            alignment: { vertical: "center" },
+          };
+          headers.forEach(function (_, i) {
+            var addr = excelColLetter(i) + "2";
+            if (!ws[addr]) ws[addr] = { t: "s", v: headers[i] };
+            ws[addr].s = headerStyle;
+          });
           var wb = XLSX.utils.book_new();
           XLSX.utils.book_append_sheet(wb, ws, "Dispo");
           return wb;
@@ -4160,7 +4193,9 @@
           .addEventListener("click", function () {
             if (!excelWorkbook) return;
             try {
-              XLSX.writeFile(excelWorkbook, "dispo_consolidado.xlsx");
+              XLSX.writeFile(excelWorkbook, "dispo_consolidado.xlsx", {
+                cellStyles: true,
+              });
             } catch (e) {
               alert("No se pudo descargar el Excel.");
             }
