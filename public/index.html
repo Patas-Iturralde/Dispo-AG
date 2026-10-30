@@ -841,6 +841,103 @@
         cursor: pointer;
         font-size: 0.75rem;
       }
+      .cal-list .cal-entry-actions {
+        display: flex;
+        gap: 0.35rem;
+        flex-shrink: 0;
+      }
+      .cal-list .cal-entry-edit {
+        color: var(--accent);
+      }
+      .cal-badge {
+        cursor: pointer;
+      }
+      .cal-badge:hover {
+        outline: 1px solid rgba(0, 0, 0, 0.2);
+      }
+      .cal-edit-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        align-items: center;
+        margin-top: 0.35rem;
+      }
+      .cal-edit-hint {
+        font-size: 0.75rem;
+        color: var(--muted);
+        margin: 0.35rem 0 0;
+      }
+
+      /* Empaque */
+      .empaque-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .empaque-item {
+        display: grid;
+        grid-template-columns: minmax(120px, 1.4fr) minmax(90px, 0.7fr) minmax(90px, 0.7fr);
+        gap: 0.65rem;
+        align-items: center;
+        padding: 0.65rem 0.85rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.45rem;
+        background: #fafbfc;
+      }
+      @media (max-width: 640px) {
+        .empaque-item {
+          grid-template-columns: 1fr;
+          gap: 0.4rem;
+        }
+      }
+      .empaque-item-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+      .empaque-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+      .empaque-field label {
+        margin: 0;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+      .empaque-field select,
+      .empaque-field input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 0.35rem 0.45rem;
+        font-size: 0.85rem;
+        background: #fff;
+      }
+      .empaque-head {
+        display: grid;
+        grid-template-columns: minmax(120px, 1.4fr) minmax(90px, 0.7fr) minmax(90px, 0.7fr);
+        gap: 0.65rem;
+        padding: 0 0.85rem 0.4rem;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      @media (max-width: 640px) {
+        .empaque-head { display: none; }
+      }
+      .empaque-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        align-items: center;
+      }
 
       /* Turnos */
       .turnos-layout {
@@ -960,6 +1057,7 @@
       <nav class="main-tabs" role="tablist" aria-label="Secciones">
         <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="disponibilidad" id="tabBtnDisponibilidad">DISPONIBILIDAD</button>
         <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="promociones" id="tabBtnPromociones">Promociones</button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="empaque" id="tabBtnEmpaque">Empaque</button>
         <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="calendario" id="tabBtnCalendario">Calendario</button>
         <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="turnos" id="tabBtnTurnos">Turnos</button>
       </nav>
@@ -986,6 +1084,11 @@
               <input type="checkbox" id="optPrices" />
               <span>Precios</span>
               <span class="dispo-option-hint">lista default automática</span>
+            </label>
+            <label class="dispo-option" for="optNoQtyFilter">
+              <input type="checkbox" id="optNoQtyFilter" />
+              <span>Sin filtro de cantidad</span>
+              <span class="dispo-option-hint">cajas reales · sin Smilax</span>
             </label>
           </div>
           <div class="section-title">Archivos Excel (.xls / .xlsx)</div>
@@ -1137,10 +1240,27 @@
         </div>
       </div>
 
+      <div class="tab-panel" id="tab-empaque" role="tabpanel" aria-labelledby="tabBtnEmpaque">
+        <div class="tab-card">
+          <h2>Empaque</h2>
+          <p class="tab-lead">Tipo de caja y número de stems por categoría. Los cambios se guardan automáticamente.</p>
+          <div class="empaque-head">
+            <span>Categoría</span>
+            <span>Tipo de caja</span>
+            <span>Stems</span>
+          </div>
+          <ul class="empaque-list" id="empaqueList"></ul>
+          <div class="empaque-actions">
+            <button type="button" class="btn btn-outline btn-secondary btn-sm" id="empaqueResetBtn">Restablecer valores</button>
+            <span class="feedback" id="empaqueFeedback"></span>
+          </div>
+        </div>
+      </div>
+
       <div class="tab-panel" id="tab-calendario" role="tabpanel" aria-labelledby="tabBtnCalendario">
         <div class="tab-card">
           <h2>Calendario</h2>
-          <p class="tab-lead">Eventos, feriados, vacaciones y turnos de sábado (sincronizados con la pestaña Turnos).</p>
+          <p class="tab-lead">Eventos, feriados, vacaciones y turnos de sábado (sincronizados con la pestaña Turnos). Toca un evento para editarlo o eliminarlo.</p>
           <div class="cal-layout">
             <div>
               <div class="cal-nav">
@@ -1177,7 +1297,12 @@
                 <label for="calEntryTitle">Título</label>
                 <input type="text" id="calEntryTitle" placeholder="Ej. Evento de prueba" maxlength="120" />
               </div>
-              <button type="button" class="btn btn-primary btn-sm" id="calAddEntryBtn">Añadir</button>
+              <p class="cal-edit-hint" id="calEditHint" hidden>Editando evento. Guarda los cambios o cancela.</p>
+              <div class="cal-edit-actions">
+                <button type="button" class="btn btn-primary btn-sm" id="calAddEntryBtn">Añadir</button>
+                <button type="button" class="btn-sm-soft" id="calCancelEditBtn" hidden>Cancelar</button>
+                <button type="button" class="btn-sm-soft" id="calDeleteEntryBtn" hidden style="color:#c92a2a">Eliminar</button>
+              </div>
               <ul class="cal-list" id="calDayEntries"></ul>
 
               <hr style="margin:1rem 0;border:0;border-top:1px solid var(--border)" />
@@ -1263,8 +1388,8 @@
       crossorigin="anonymous"
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="species-data.js"></script>
-    <script src="default-prices-data.js"></script>
+    <script src="species-data.js?v=20260922c"></script>
+    <script src="default-prices-data.js?v=20260921b"></script>
     <script>
       (function () {
         // Evitar que el navegador abra el archivo al soltarlo fuera de las zonas
@@ -1305,7 +1430,7 @@
         var submitBtn = document.getElementById("submitBtn");
         var fileReminder = document.getElementById("fileReminder");
         var excelWorkbook = null;
-        var finalHeaders = ["# Cajas", "Grado", "Largo", "Variedad"];
+        var finalHeaders = ["#", "BOX TYPE", "VARIETY"];
         var droppedFiles = [null, null, null, null, null];
 
         function showMessage(text, type) {
@@ -1410,12 +1535,21 @@
           var candNorm = candidates.map(function (c) {
             return normalizeName(c);
           });
+          // 1) Match exacto
           for (var i = 0; i < keys.length; i++) {
             var k = keys[i];
             var nk = normalizeName(k);
             if (candNorm.indexOf(nk) !== -1) return k;
+          }
+          // 2) La clave contiene el candidato completo (evita que "tipo" matchee "tipo flor" al revés)
+          for (i = 0; i < keys.length; i++) {
+            k = keys[i];
+            nk = normalizeName(k);
             for (var j = 0; j < candNorm.length; j++) {
-              if (nk.indexOf(candNorm[j]) !== -1) return k;
+              var cand = candNorm[j];
+              if (!cand || cand.length < 3) continue;
+              if (nk === cand) return k;
+              if (nk.indexOf(cand) !== -1) return k;
             }
           }
           return null;
@@ -1442,7 +1576,7 @@
         }
 
         function clampCajas(rows, cajasKey) {
-          if (!cajasKey) return;
+          if (!cajasKey || optNoQtyFilterEnabled) return;
           rows.forEach(function (r) {
             var raw = String(r[cajasKey] == null ? "" : r[cajasKey]);
             var m = raw.match(/-?\d+/);
@@ -1508,6 +1642,7 @@
         var pricesFileObj = null;
         var optColorEnabled = false;
         var optPricesEnabled = false;
+        var optNoQtyFilterEnabled = false;
         var speciesMap = {}; // variedad → especie
         var speciesNames = []; // lista de especies para prefijo
         var speciesDisplay = { ROSES: "ROSAS" };
@@ -2021,6 +2156,7 @@
           speciesDisplay = Object.assign(
             {
               ROSES: "ROSAS",
+              CARNATION: "CARNATIONS",
               ASTROMELIA: "ALSTROMELIA",
               AMARANTHUS: "AMARANTO",
               ANEMONE: "ANEMONAS",
@@ -2054,7 +2190,12 @@
         }
 
         function ensureSpeciesMapLoaded() {
-          if (speciesNames.length) return Promise.resolve();
+          if (typeof window !== "undefined" && window.__SPECIES_MAP__) {
+            applySpeciesData(window.__SPECIES_MAP__);
+          }
+          if (speciesNames.length && Object.keys(speciesMap).length) {
+            return Promise.resolve();
+          }
           return loadSpeciesMap();
         }
 
@@ -2129,6 +2270,12 @@
           if (/^FIORINO\b/.test(key)) return displaySpeciesName("DIANTHUS");
           if (/^SUCCESS\b/.test(key)) return displaySpeciesName("RANUNCULUS");
           if (/^LARKSPUR\b/.test(cleaned)) return displaySpeciesName("LARKSPUR");
+          if (/^CLAVEL\b/.test(key) || /^MINI\s+CLAVEL\b/.test(key)) {
+            return displaySpeciesName("CARNATION");
+          }
+          if (/^CARNATION\b/.test(key) || /^MINI\s+CARNATION\b/.test(key)) {
+            return displaySpeciesName("CARNATION");
+          }
           if (/^BUTTERFLY\b/.test(key) || /^ELEGANCE\b/.test(key)) {
             return displaySpeciesName("RANUNCULUS");
           }
@@ -2177,22 +2324,38 @@
           return g;
         }
 
-        function normalizeLargoOut(largoRaw, flatFormat) {
+        function normalizeLargoOut(largoRaw) {
           var largo = String(largoRaw == null ? "" : largoRaw).trim();
           if (!largo) return "";
-          if (flatFormat) {
-            var m = largo.match(/(\d+)/);
-            return m ? m[1] : largo.replace(/\s*cm\s*/i, "").trim();
-          }
-          if (!/cm/i.test(largo) && /^\d+([.,]\d+)?$/.test(largo)) {
-            return largo + " cm";
-          }
-          return largo;
+          var m = largo.match(/(\d+)/);
+          return m ? m[1] : largo.replace(/\s*cm\s*/gi, "").trim();
         }
 
         function isFlatDisponibilidadFormat(sample) {
-          var tipoFlorKey = findKey(sample, ["tipo flor"]);
-          if (tipoFlorKey) return false;
+          var keys = Object.keys(sample || {});
+          var norms = keys.map(function (k) {
+            return normalizeName(k);
+          });
+          function hasExact(name) {
+            return norms.indexOf(normalizeName(name)) !== -1;
+          }
+          function hasIncludes(part) {
+            var p = normalizeName(part);
+            for (var i = 0; i < norms.length; i++) {
+              if (norms[i].indexOf(p) !== -1) return true;
+            }
+            return false;
+          }
+          // Formato clásico con columna Tipo flor
+          if (hasExact("tipo flor")) return false;
+          // Formato plano: Nombre Variedad + Cajas Disponibles (+ Tipo = QB/EB)
+          if (
+            (hasExact("nombre variedad") || hasIncludes("nombre variedad")) &&
+            (hasExact("cajas disponibles") || hasIncludes("cajas disponible"))
+          ) {
+            return true;
+          }
+          // Fallback: variedad + cajas + largo, sin tipo flor
           var variedadKey = findKey(sample, [
             "nombre variedad",
             "variedad",
@@ -2203,21 +2366,21 @@
             "# cajas",
             "cajas",
           ]);
-          var largoKey = findKey(sample, ["largo (cm)", "largo", "longitud", "cm"]);
+          var largoKey = findKey(sample, ["largo (cm)", "largo", "longitud"]);
           return !!(variedadKey && cajasKey && largoKey);
         }
 
         function initDispoOptions() {
           var colorCb = document.getElementById("optColor");
           var pricesCb = document.getElementById("optPrices");
-          optColorEnabled = loadJSON("dispo-ag-opt-color", false) === true;
-          // Precios siempre inicia desactivada
+          var noQtyCb = document.getElementById("optNoQtyFilter");
+          optColorEnabled = false;
           optPricesEnabled = false;
+          optNoQtyFilterEnabled = false;
           if (colorCb) {
-            colorCb.checked = optColorEnabled;
+            colorCb.checked = false;
             colorCb.addEventListener("change", function () {
               optColorEnabled = !!colorCb.checked;
-              saveJSON("dispo-ag-opt-color", optColorEnabled);
             });
           }
           if (pricesCb) {
@@ -2225,6 +2388,12 @@
             pricesCb.addEventListener("change", function () {
               optPricesEnabled = !!pricesCb.checked;
               updatePricesUI(pricesFileObj, priceMaster.length);
+            });
+          }
+          if (noQtyCb) {
+            noQtyCb.checked = false;
+            noQtyCb.addEventListener("change", function () {
+              optNoQtyFilterEnabled = !!noQtyCb.checked;
             });
           }
         }
@@ -2299,6 +2468,7 @@
           vacations: "dispo-ag-vacations",
           roster: "dispo-ag-roster",
           turnoOverrides: "dispo-ag-turno-overrides",
+          empaque: "dispo-ag-empaque",
         };
 
         var DEFAULT_VENDORS = [
@@ -2570,9 +2740,200 @@
           renderPromociones();
         }
 
+        // ——— Empaque ———
+        var EMPAQUE_BOX_TYPES = ["QB", "EB", "HB", "FB", "HB/EB", "Otro"];
+        var DEFAULT_EMPAQUE = {
+          ROSES: { box: "QB", stems: "25" },
+          CARNATION: { box: "QB", stems: "25" },
+          DELPHINIUM: { box: "EB", stems: "10" },
+          "SWEET PEA": { box: "EB", stems: "25" },
+          AMARANTHUS: { box: "QB", stems: "5" },
+          SMILAX: { box: "QB", stems: "5" },
+          "SPRAY ROSE": { box: "QB", stems: "10" },
+          LISIANTHUS: { box: "QB", stems: "10" },
+          GYPSOPHILA: { box: "QB", stems: "10" },
+          GERBERA: { box: "QB", stems: "25" },
+          ANEMONE: { box: "QB", stems: "25" },
+          RANUNCULUS: { box: "QB", stems: "25" },
+        };
+
+        function getDefaultEmpaqueMap() {
+          var map = {};
+          var names =
+            speciesNames && speciesNames.length
+              ? speciesNames.slice()
+              : Object.keys(DEFAULT_EMPAQUE);
+          // speciesNames may be sorted by length; rebuild unique category keys
+          var seen = {};
+          names.forEach(function (n) {
+            var key = String(n || "").trim().toUpperCase();
+            if (!key || seen[key]) return;
+            seen[key] = true;
+            var def = DEFAULT_EMPAQUE[key] || { box: "QB", stems: "" };
+            map[key] = { box: def.box || "QB", stems: def.stems != null ? String(def.stems) : "" };
+          });
+          Object.keys(DEFAULT_EMPAQUE).forEach(function (key) {
+            if (!map[key]) {
+              var def = DEFAULT_EMPAQUE[key];
+              map[key] = { box: def.box || "QB", stems: def.stems != null ? String(def.stems) : "" };
+            }
+          });
+          return map;
+        }
+
+        function getEmpaqueMap() {
+          var saved = loadJSON(STORAGE_KEYS.empaque, null);
+          var base = getDefaultEmpaqueMap();
+          if (!saved || typeof saved !== "object") return base;
+          Object.keys(saved).forEach(function (key) {
+            var k = String(key || "").trim().toUpperCase();
+            if (!k) return;
+            var row = saved[key] || saved[k] || {};
+            base[k] = {
+              box: row.box != null && row.box !== "" ? String(row.box) : (base[k] && base[k].box) || "QB",
+              stems: row.stems != null ? String(row.stems) : (base[k] && base[k].stems) || "",
+            };
+          });
+          return base;
+        }
+
+        function setEmpaqueMap(map) {
+          saveJSON(STORAGE_KEYS.empaque, map || {});
+        }
+
+        function empaqueCategoryOrder(a, b) {
+          var da = displaySpeciesName(a);
+          var db = displaySpeciesName(b);
+          var na = String(da || a).toUpperCase();
+          var nb = String(db || b).toUpperCase();
+          if (na === "ROSAS" || na === "ROSES") return -1;
+          if (nb === "ROSAS" || nb === "ROSES") return 1;
+          return na.localeCompare(nb, "es", { sensitivity: "base" });
+        }
+
+        function renderEmpaque() {
+          var list = document.getElementById("empaqueList");
+          if (!list) return;
+          ensureSpeciesMapLoaded();
+          var map = getEmpaqueMap();
+          var keys = Object.keys(map).sort(empaqueCategoryOrder);
+          list.innerHTML = "";
+          keys.forEach(function (key) {
+            var row = map[key] || { box: "QB", stems: "" };
+            var li = document.createElement("li");
+            li.className = "empaque-item";
+            li.dataset.species = key;
+
+            var name = document.createElement("div");
+            name.className = "empaque-item-name";
+            name.textContent = displaySpeciesName(key);
+
+            var boxField = document.createElement("div");
+            boxField.className = "empaque-field";
+            var boxLabel = document.createElement("label");
+            boxLabel.textContent = "Tipo de caja";
+            var boxSel = document.createElement("select");
+            boxSel.setAttribute("aria-label", "Tipo de caja " + key);
+            var boxVal = String(row.box || "QB").toUpperCase();
+            var known = EMPAQUE_BOX_TYPES.slice();
+            if (boxVal && known.indexOf(boxVal) === -1 && boxVal !== "OTRO") {
+              known.splice(known.length - 1, 0, boxVal);
+            }
+            known.forEach(function (opt) {
+              var o = document.createElement("option");
+              o.value = opt;
+              o.textContent = opt;
+              if (opt === boxVal || (opt === "Otro" && known.indexOf(boxVal) === -1)) {
+                o.selected = true;
+              }
+              boxSel.appendChild(o);
+            });
+            if (EMPAQUE_BOX_TYPES.indexOf(boxVal) === -1 && boxVal) {
+              boxSel.value = boxVal;
+            }
+            boxField.appendChild(boxLabel);
+            boxField.appendChild(boxSel);
+
+            var stemsField = document.createElement("div");
+            stemsField.className = "empaque-field";
+            var stemsLabel = document.createElement("label");
+            stemsLabel.textContent = "Stems";
+            var stemsInp = document.createElement("input");
+            stemsInp.type = "number";
+            stemsInp.min = "0";
+            stemsInp.step = "1";
+            stemsInp.placeholder = "0";
+            stemsInp.value = row.stems != null ? String(row.stems) : "";
+            stemsInp.setAttribute("aria-label", "Stems " + key);
+            stemsField.appendChild(stemsLabel);
+            stemsField.appendChild(stemsInp);
+
+            function persistRow() {
+              var all = getEmpaqueMap();
+              var box = boxSel.value;
+              if (box === "Otro") {
+                var custom = window.prompt("Tipo de caja:", row.box || "");
+                if (custom == null || !String(custom).trim()) {
+                  boxSel.value = row.box || "QB";
+                  return;
+                }
+                box = String(custom).trim().toUpperCase();
+                var exists = false;
+                Array.prototype.forEach.call(boxSel.options, function (o) {
+                  if (o.value === box) exists = true;
+                });
+                if (!exists) {
+                  var o = document.createElement("option");
+                  o.value = box;
+                  o.textContent = box;
+                  boxSel.insertBefore(o, boxSel.options[boxSel.options.length - 1]);
+                }
+                boxSel.value = box;
+              }
+              all[key] = {
+                box: box,
+                stems: String(stemsInp.value == null ? "" : stemsInp.value).trim(),
+              };
+              setEmpaqueMap(all);
+              var fb = document.getElementById("empaqueFeedback");
+              if (fb) {
+                fb.textContent = "Guardado";
+                setTimeout(function () {
+                  if (fb.textContent === "Guardado") fb.textContent = "";
+                }, 1200);
+              }
+            }
+
+            boxSel.addEventListener("change", persistRow);
+            stemsInp.addEventListener("change", persistRow);
+            stemsInp.addEventListener("blur", persistRow);
+
+            li.appendChild(name);
+            li.appendChild(boxField);
+            li.appendChild(stemsField);
+            list.appendChild(li);
+          });
+        }
+
+        function initEmpaque() {
+          var resetBtn = document.getElementById("empaqueResetBtn");
+          if (resetBtn) {
+            resetBtn.addEventListener("click", function () {
+              setEmpaqueMap(getDefaultEmpaqueMap());
+              renderEmpaque();
+              var fb = document.getElementById("empaqueFeedback");
+              if (fb) fb.textContent = "Valores restablecidos";
+            });
+          }
+          ensureSpeciesMapLoaded().then(function () {
+            renderEmpaque();
+          });
+        }
+
         // ——— Calendario ———
         var calView = { year: new Date().getFullYear(), month: new Date().getMonth() };
         var calSelected = null;
+        var calEditingId = null;
 
         function ymd(d) {
           var dd = String(d.getDate()).padStart(2, "0");
@@ -2597,10 +2958,66 @@
         }
 
         function getCalendarEntries() {
-          return loadJSON(STORAGE_KEYS.calendar, []);
+          var list = loadJSON(STORAGE_KEYS.calendar, []);
+          var changed = false;
+          list.forEach(function (e) {
+            if (!e.id) {
+              e.id = "cal-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+              changed = true;
+            }
+          });
+          if (changed) saveJSON(STORAGE_KEYS.calendar, list);
+          return list;
         }
         function setCalendarEntries(list) {
           saveJSON(STORAGE_KEYS.calendar, list);
+        }
+        function findCalendarEntry(id) {
+          return getCalendarEntries().find(function (e) { return e.id === id; }) || null;
+        }
+        function clearCalEditForm() {
+          calEditingId = null;
+          var title = document.getElementById("calEntryTitle");
+          var type = document.getElementById("calEntryType");
+          var addBtn = document.getElementById("calAddEntryBtn");
+          var cancelBtn = document.getElementById("calCancelEditBtn");
+          var deleteBtn = document.getElementById("calDeleteEntryBtn");
+          var hint = document.getElementById("calEditHint");
+          if (title) title.value = "";
+          if (type) type.value = "event";
+          if (addBtn) addBtn.textContent = "Añadir";
+          if (cancelBtn) cancelBtn.hidden = true;
+          if (deleteBtn) deleteBtn.hidden = true;
+          if (hint) hint.hidden = true;
+        }
+        function startCalEdit(entry) {
+          if (!entry) return;
+          calEditingId = entry.id;
+          var title = document.getElementById("calEntryTitle");
+          var type = document.getElementById("calEntryType");
+          var dateInp = document.getElementById("calSelectedDate");
+          var addBtn = document.getElementById("calAddEntryBtn");
+          var cancelBtn = document.getElementById("calCancelEditBtn");
+          var deleteBtn = document.getElementById("calDeleteEntryBtn");
+          var hint = document.getElementById("calEditHint");
+          if (dateInp && entry.date) dateInp.value = entry.date;
+          if (title) {
+            title.value = entry.title || "";
+            title.focus();
+          }
+          if (type) type.value = entry.type === "holiday" ? "holiday" : "event";
+          if (addBtn) addBtn.textContent = "Guardar";
+          if (cancelBtn) cancelBtn.hidden = false;
+          if (deleteBtn) deleteBtn.hidden = false;
+          if (hint) hint.hidden = false;
+          calSelected = entry.date;
+        }
+        function deleteCalendarEntryById(id) {
+          if (!id) return;
+          var all = getCalendarEntries().filter(function (x) { return x.id !== id; });
+          setCalendarEntries(all);
+          if (calEditingId === id) clearCalEditForm();
+          renderCalendar();
         }
         function getVacations() {
           return loadJSON(STORAGE_KEYS.vacations, []);
@@ -2699,6 +3116,13 @@
               var b = document.createElement("div");
               b.className = "cal-badge " + (e.type === "holiday" ? "holiday" : "event");
               b.textContent = e.title;
+              b.title = "Tocar para editar o eliminar";
+              b.dataset.entryId = e.id;
+              b.addEventListener("click", function (ev) {
+                ev.stopPropagation();
+                selectCalDay(key);
+                startCalEdit(e);
+              });
               badges.appendChild(b);
             });
 
@@ -2729,6 +3153,7 @@
 
             cell.appendChild(badges);
             cell.addEventListener("click", function () {
+              clearCalEditForm();
               selectCalDay(cell.dataset.date);
             });
             grid.appendChild(cell);
@@ -2778,22 +3203,34 @@
           list.innerHTML = "";
           getCalendarEntries()
             .filter(function (e) { return e.date === dateStr; })
-            .forEach(function (e, idx) {
+            .forEach(function (e) {
               var li = document.createElement("li");
               var span = document.createElement("span");
               span.textContent = (e.type === "holiday" ? "Feriado: " : "Evento: ") + e.title;
+              span.style.cursor = "pointer";
+              span.title = "Tocar para editar";
+              span.addEventListener("click", function () {
+                startCalEdit(e);
+              });
+              var actions = document.createElement("div");
+              actions.className = "cal-entry-actions";
+              var editBtn = document.createElement("button");
+              editBtn.type = "button";
+              editBtn.className = "cal-entry-edit";
+              editBtn.textContent = "Editar";
+              editBtn.addEventListener("click", function () {
+                startCalEdit(e);
+              });
               var btn = document.createElement("button");
               btn.type = "button";
               btn.textContent = "Eliminar";
               btn.addEventListener("click", function () {
-                var all = getCalendarEntries().filter(function (x) {
-                  return !(x.date === e.date && x.title === e.title && x.type === e.type);
-                });
-                setCalendarEntries(all);
-                renderCalendar();
+                deleteCalendarEntryById(e.id);
               });
+              actions.appendChild(editBtn);
+              actions.appendChild(btn);
               li.appendChild(span);
-              li.appendChild(btn);
+              li.appendChild(actions);
               list.appendChild(li);
             });
         }
@@ -2854,10 +3291,46 @@
               var title = String(document.getElementById("calEntryTitle").value || "").trim();
               if (!date || !title) return;
               var all = getCalendarEntries();
-              all.push({ date: date, type: type, title: title });
+              if (calEditingId) {
+                var found = false;
+                all = all.map(function (e) {
+                  if (e.id !== calEditingId) return e;
+                  found = true;
+                  return { id: e.id, date: date, type: type, title: title };
+                });
+                if (!found) {
+                  all.push({
+                    id: calEditingId,
+                    date: date,
+                    type: type,
+                    title: title,
+                  });
+                }
+              } else {
+                all.push({
+                  id: "cal-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8),
+                  date: date,
+                  type: type,
+                  title: title,
+                });
+              }
               setCalendarEntries(all);
-              document.getElementById("calEntryTitle").value = "";
+              clearCalEditForm();
               renderCalendar();
+              selectCalDay(date);
+            });
+          }
+          var cancelEditBtn = document.getElementById("calCancelEditBtn");
+          if (cancelEditBtn) {
+            cancelEditBtn.addEventListener("click", function () {
+              clearCalEditForm();
+            });
+          }
+          var deleteEditBtn = document.getElementById("calDeleteEntryBtn");
+          if (deleteEditBtn) {
+            deleteEditBtn.addEventListener("click", function () {
+              if (!calEditingId) return;
+              deleteCalendarEntryById(calEditingId);
             });
           }
           var vacBtn = document.getElementById("vacAddBtn");
@@ -3199,6 +3672,7 @@
               if (tab === "calendario") renderCalendar();
               if (tab === "turnos") renderTurnos();
               if (tab === "promociones") renderPromociones();
+              if (tab === "empaque") renderEmpaque();
             });
           });
         }
@@ -3207,6 +3681,7 @@
         ensureRosterPersisted();
         initDispoOptions();
         initPromociones();
+        initEmpaque();
         initCalendario();
         initTurnos();
 
@@ -3231,6 +3706,16 @@
         function processRows(allRows) {
           if (!allRows.length)
             throw new Error("No se encontraron filas en los Excel.");
+
+          // Asegurar mapa de especies antes de clasificar
+          if (typeof window !== "undefined" && window.__SPECIES_MAP__) {
+            applySpeciesData(window.__SPECIES_MAP__);
+          }
+          if (!Object.keys(speciesMap).length) {
+            throw new Error(
+              "No se cargó el mapa de especies (species-data.js). Recarga la página con Ctrl+F5.",
+            );
+          }
 
           var sample = allRows[0] || {};
           var flatFormat = isFlatDisponibilidadFormat(sample);
@@ -3296,7 +3781,6 @@
               );
               var largo = normalizeLargoOut(
                 r[largoKey] == null ? "" : r[largoKey],
-                flatFormat,
               );
               var color = colorKey
                 ? String(r[colorKey] == null ? "" : r[colorKey]).trim()
@@ -3309,7 +3793,7 @@
               var m = rawCajas.match(/-?\d+/);
               var cajas = m ? parseInt(m[0], 10) : 0;
               if (isNaN(cajas)) cajas = 0;
-              if (cajas > 6) cajas = 6;
+              if (!optNoQtyFilterEnabled && cajas > 6) cajas = 6;
 
               var tipoFlor = flatFormat
                 ? resolveSpeciesFromVariety(variedad)
@@ -3365,6 +3849,12 @@
           });
 
           var output = [];
+          if (optNoQtyFilterEnabled) {
+            tipos = tipos.filter(function (t) {
+              return !isSmilaxSpecies(displaySpeciesName(t), t);
+            });
+          }
+
           tipos.forEach(function (tipo, idx) {
             var rows = groupsMap.get(tipo);
             if (!rows || !rows.length) return;
@@ -3389,7 +3879,14 @@
           return output;
         }
 
+        function isSmilaxSpecies(name, key) {
+          var a = normalizeSpecies(name);
+          var b = normalizeSpecies(key);
+          return a === "SMILAX" || b === "SMILAX";
+        }
+
         function appendSmilaxSection(rows) {
+          if (optNoQtyFilterEnabled) return;
           if (!rows || !rows.length) return;
 
           var hasSmilaxTitle = rows.some(function (r) {
@@ -3416,7 +3913,7 @@
             tipoFlor: "SMILAX",
             cajas: 5,
             grado: "QB",
-            largo: "120 cm",
+            largo: "120",
             variedad: "SMILAX GARLAND",
             color: "",
             isTitle: false,
@@ -3471,8 +3968,30 @@
           return headers;
         }
 
+        function buildExcelHeaders() {
+          var headers = ["#", "BOX TYPE", "VARIETY"];
+          if (optColorEnabled) headers.push("COLOR");
+          if (pricesActive()) headers.push("PRICE");
+          return headers;
+        }
+
+        function buildExcelRowCells(r) {
+          var cells = [
+            r.cajas == null ? "" : r.cajas,
+            r.grado == null ? "" : r.grado,
+            r.variedad == null ? "" : r.variedad,
+          ];
+          if (optColorEnabled) {
+            cells.push(r.color == null ? "" : r.color);
+          }
+          if (pricesActive()) {
+            cells.push(r.precio == null ? "" : r.precio);
+          }
+          return cells;
+        }
+
         function emptyOutputPad() {
-          return buildOutputHeaders().map(function () {
+          return buildExcelHeaders().map(function () {
             return "";
           });
         }
@@ -3500,7 +4019,7 @@
 
         function buildWorkbook(rows) {
           var data = [];
-          data.push(buildOutputHeaders());
+          data.push(buildExcelHeaders());
           rows.forEach(function (r) {
             if (r.isTitle) {
               var titleRow = emptyOutputPad();
@@ -3509,7 +4028,7 @@
             } else if (r.isSeparator) {
               data.push(emptyOutputPad());
             } else {
-              data.push(buildOutputRowCells(r));
+              data.push(buildExcelRowCells(r));
             }
           });
           var ws = XLSX.utils.aoa_to_sheet(data);
