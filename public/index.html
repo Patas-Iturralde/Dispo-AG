@@ -1012,13 +1012,21 @@
 
       .dispo-options {
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem 1.25rem;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem 1.5rem;
         margin: 0 0 1rem;
         padding: 0.75rem 0.9rem;
         background: #f8f9fb;
         border: 1px solid var(--border);
         border-radius: var(--radius-sm);
+      }
+      .dispo-options-left {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1.25rem;
       }
       .dispo-option {
         display: inline-flex;
@@ -1037,10 +1045,8 @@
         accent-color: var(--accent);
         cursor: pointer;
       }
-      .dispo-option-hint {
-        font-weight: 400;
-        color: var(--muted);
-        font-size: 0.78rem;
+      .dispo-option-nofilter {
+        margin-left: auto;
       }
 
     </style>
@@ -1075,20 +1081,19 @@
 
         <form id="uploadForm" enctype="multipart/form-data">
           <div class="dispo-options" id="dispoOptions">
-            <label class="dispo-option" for="optColor">
-              <input type="checkbox" id="optColor" />
-              <span>Color</span>
-              <span class="dispo-option-hint">columna al lado de Variedad</span>
-            </label>
-            <label class="dispo-option" for="optPrices">
-              <input type="checkbox" id="optPrices" />
-              <span>Precios</span>
-              <span class="dispo-option-hint">lista default automática</span>
-            </label>
-            <label class="dispo-option" for="optNoQtyFilter">
+            <div class="dispo-options-left">
+              <label class="dispo-option" for="optColor">
+                <input type="checkbox" id="optColor" />
+                <span>Color</span>
+              </label>
+              <label class="dispo-option" for="optPrices">
+                <input type="checkbox" id="optPrices" />
+                <span>Precios</span>
+              </label>
+            </div>
+            <label class="dispo-option dispo-option-nofilter" for="optNoQtyFilter">
               <input type="checkbox" id="optNoQtyFilter" />
               <span>Sin filtro de cantidad</span>
-              <span class="dispo-option-hint">cajas reales · sin Smilax</span>
             </label>
           </div>
           <div class="section-title">Archivos Excel (.xls / .xlsx)</div>
@@ -1388,7 +1393,7 @@
       crossorigin="anonymous"
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="species-data.js?v=20260922c"></script>
+    <script src="species-data.js?v=20261029a"></script>
     <script src="default-prices-data.js?v=20260921b"></script>
     <script>
       (function () {
@@ -2282,6 +2287,15 @@
           if (hit) return hit;
 
           if (/^LIRIOS?\b/.test(key)) return "LIRIOS";
+          if (/\bSNAPSTAR\b/.test(key) || /\bSNAPSTAR\b/.test(cleaned)) {
+            return displaySpeciesName("SNAPDRAGON");
+          }
+          if (/\bSOLOMIO\b/.test(key) || /\bSOLOMIO\b/.test(cleaned)) {
+            return displaySpeciesName("DIANTHUS");
+          }
+          if (/\bELEGANCE\b/.test(key) || /\bELEGANCE\b/.test(cleaned)) {
+            return displaySpeciesName("RANUNCULUS");
+          }
           if (/^PON\s+PON\b/.test(key)) return displaySpeciesName("RANUNCULUS");
           if (/^FIORINO\b/.test(key)) return displaySpeciesName("DIANTHUS");
           if (/^SUCCESS\b/.test(key)) return displaySpeciesName("RANUNCULUS");
@@ -2292,7 +2306,7 @@
           if (/^CARNATION\b/.test(key) || /^MINI\s+CARNATION\b/.test(key)) {
             return displaySpeciesName("CARNATION");
           }
-          if (/^BUTTERFLY\b/.test(key) || /^ELEGANCE\b/.test(key)) {
+          if (/^BUTTERFLY\b/.test(key)) {
             return displaySpeciesName("RANUNCULUS");
           }
 

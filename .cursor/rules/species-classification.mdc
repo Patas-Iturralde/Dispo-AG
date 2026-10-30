@@ -1,0 +1,14 @@
+---
+description: Clasificación de variedades a especies en disponibilidad
+alwaysApply: true
+---
+
+# Clasificación de especies
+
+Al agrupar variedades de disponibilidad, aplica siempre estas reglas:
+
+- Todo lo que contenga **SNAPSTAR** va a **SNAPDRAGON**.
+- Todo lo que contenga **SOLOMIO** va a **DIANTHUS**.
+- Todo lo que contenga **ELEGANCE** va a **RANUNCULUS** (ranúnculos).
+
+Mantén estas reglas en `resolveSpeciesFromVariety` (`public/index.html`) y en el mapa de especies (`public/species-map.json` / `public/species-data.js`). No las reviertas.
