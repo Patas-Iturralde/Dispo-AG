@@ -499,9 +499,14 @@
       .notes-list li {
         margin-bottom: 0.45rem;
         padding-left: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.35rem;
       }
       .notes-list li::before {
         content: "- ";
+        flex-shrink: 0;
+        margin-top: 0.15rem;
       }
       .notes-list .notes-empty {
         color: var(--muted);
@@ -509,6 +514,38 @@
       }
       .notes-list .notes-empty::before {
         content: none;
+      }
+      .notes-item-text {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 0.1rem 0.3rem;
+        outline: none;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .notes-item-text:hover {
+        border-color: var(--border);
+        background: #fafbfc;
+      }
+      .notes-item-text:focus {
+        border-color: var(--border-focus);
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(92, 124, 250, 0.12);
+      }
+      .notes-item-del {
+        flex-shrink: 0;
+        border: none;
+        background: transparent;
+        color: #c92a2a;
+        cursor: pointer;
+        font-size: 1.05rem;
+        line-height: 1;
+        padding: 0.1rem 0.25rem;
+      }
+      .notes-item-del:hover {
+        color: #a51111;
       }
       .notes-form {
         display: flex;
@@ -4267,19 +4304,59 @@
             localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
           }
 
+          function persistNoteEdit(idx, span) {
+            var notes = loadNotes();
+            if (idx < 0 || idx >= notes.length) return;
+            var v = String(span.textContent || "").replace(/\u00a0/g, " ").trim();
+            if (!v) notes.splice(idx, 1);
+            else notes[idx] = v;
+            saveNotes(notes);
+            renderNotes();
+          }
+
           function renderNotes() {
             var notes = loadNotes();
             listEl.innerHTML = "";
             if (!notes.length) {
               var empty = document.createElement("li");
               empty.className = "notes-empty";
-              empty.textContent = "Todavía no hay notas.";
+              empty.textContent = "Todavía no hay notas. Escríbelas abajo o añádelas aquí.";
               listEl.appendChild(empty);
               return;
             }
-            notes.forEach(function (text) {
+            notes.forEach(function (text, idx) {
               var li = document.createElement("li");
-              li.textContent = text;
+              var span = document.createElement("span");
+              span.className = "notes-item-text";
+              span.contentEditable = "true";
+              span.setAttribute("role", "textbox");
+              span.setAttribute("aria-label", "Editar nota");
+              span.textContent = text;
+              span.addEventListener("blur", function () {
+                persistNoteEdit(idx, span);
+              });
+              span.addEventListener("keydown", function (e) {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  span.blur();
+                }
+              });
+              var del = document.createElement("button");
+              del.type = "button";
+              del.className = "notes-item-del";
+              del.setAttribute("aria-label", "Eliminar nota");
+              del.textContent = "×";
+              del.addEventListener("mousedown", function (e) {
+                e.preventDefault();
+              });
+              del.addEventListener("click", function () {
+                var all = loadNotes();
+                all.splice(idx, 1);
+                saveNotes(all);
+                renderNotes();
+              });
+              li.appendChild(span);
+              li.appendChild(del);
               listEl.appendChild(li);
             });
           }
