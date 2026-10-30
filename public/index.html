@@ -1597,8 +1597,19 @@
         function computeTopVarieties(allRows) {
           if (!allRows.length) return [];
           var sample = allRows[0] || {};
-          var cajasKey = findKey(sample, ["# cajas", "cajas"]);
-          var variedadKey = findKey(sample, ["variedad"]);
+          var cajasKey = findKey(sample, [
+            "cajas disponibles",
+            "available boxes",
+            "# cajas",
+            "cajas",
+            "boxes",
+          ]);
+          var variedadKey = findKey(sample, [
+            "nombre variedad",
+            "variety name",
+            "variedad",
+            "variety",
+          ]);
           if (!cajasKey || !variedadKey) return [];
 
           var totals = new Map();
@@ -2023,6 +2034,11 @@
               delete r.precio;
               return;
             }
+            var fromSource = parsePriceValue(r.sourcePrice);
+            if (fromSource != null) {
+              r.precio = formatPriceOut(fromSource);
+              return;
+            }
             r.precio = lookupPriceForVariety(r.variedad, r.largo);
             if (!r.precio) {
               var label =
@@ -2308,19 +2324,15 @@
         function normalizeGradoOut(grado, flatFormat) {
           var g = String(grado || "").trim().toUpperCase();
           if (!g) return "";
-          // EB-N, EB-N1, EB - N, etc. → solo EB
-          if (/^EB[\s\-]*N\b/.test(g) || g.indexOf("EB-N") === 0 || g === "EB-N") {
-            return "EB";
-          }
           g = g.replace(/\s+/g, "");
-          if (!flatFormat) {
-            if (/^EB[\-]?N/.test(g)) return "EB";
+          if (flatFormat) {
+            if (/^QB/.test(g) || g === "Q") return "Q";
+            if (/^EB/.test(g) || g === "E" || /^HB/.test(g) || g === "H") return "E";
+            if (/^FB/.test(g) || g === "F") return "F";
             return g;
           }
-          if (g === "QB" || g === "Q") return "Q";
-          if (/^EB[\-]?N/.test(g)) return "EB";
-          if (g === "EB" || g === "E" || g === "HB" || g === "H") return "E";
-          if (g === "FB" || g === "F") return "F";
+          if (/^EB[\-]?N/.test(g) || g.indexOf("EB-N") === 0) return "EB";
+          if (/^QB[\-]?N/.test(g)) return "QB";
           return g;
         }
 
@@ -2355,18 +2367,35 @@
           ) {
             return true;
           }
+          // Formato inglés: Variety Name + Available Boxes + Type/Length
+          if (
+            (hasExact("variety name") || hasExact("variety")) &&
+            (hasExact("available boxes") || hasIncludes("available box"))
+          ) {
+            return true;
+          }
           // Fallback: variedad + cajas + largo, sin tipo flor
           var variedadKey = findKey(sample, [
             "nombre variedad",
+            "variety name",
             "variedad",
             "variety",
           ]);
           var cajasKey = findKey(sample, [
             "cajas disponibles",
+            "available boxes",
             "# cajas",
             "cajas",
+            "boxes",
           ]);
-          var largoKey = findKey(sample, ["largo (cm)", "largo", "longitud"]);
+          var largoKey = findKey(sample, [
+            "largo (cm)",
+            "length (cm)",
+            "largo",
+            "longitud",
+            "length",
+            "lenght",
+          ]);
           return !!(variedadKey && cajasKey && largoKey);
         }
 
@@ -2610,8 +2639,19 @@
         function computeTopN(allRows, n) {
           if (!allRows.length) return [];
           var sample = allRows[0] || {};
-          var cajasKey = findKey(sample, ["# cajas", "cajas"]);
-          var variedadKey = findKey(sample, ["variedad"]);
+          var cajasKey = findKey(sample, [
+            "cajas disponibles",
+            "available boxes",
+            "# cajas",
+            "cajas",
+            "boxes",
+          ]);
+          var variedadKey = findKey(sample, [
+            "nombre variedad",
+            "variety name",
+            "variedad",
+            "variety",
+          ]);
           if (!cajasKey || !variedadKey) return [];
           var totals = new Map();
           allRows.forEach(function (r) {
@@ -3721,20 +3761,26 @@
           var flatFormat = isFlatDisponibilidadFormat(sample);
 
           var tipoFlorKey = findKey(sample, ["tipo flor"]);
-          var gradoKey = findKey(sample, ["grado", "tipo"]);
+          var gradoKey = findKey(sample, ["grado", "box type", "tipo", "type"]);
           var cajasKey = findKey(sample, [
             "cajas disponibles",
+            "available boxes",
             "# cajas",
             "cajas",
+            "boxes",
           ]);
           var largoKey = findKey(sample, [
             "largo (cm)",
+            "length (cm)",
             "largo",
             "longitud",
+            "length",
+            "lenght",
             "cm",
           ]);
           var variedadKey = findKey(sample, [
             "nombre variedad",
+            "variety name",
             "variedad",
             "variety",
           ]);
@@ -3746,6 +3792,7 @@
           ]);
           var precioKey = findKey(sample, [
             "precio x tallo",
+            "price per stem",
             "precio",
             "price",
             "farm price",
@@ -3754,7 +3801,7 @@
           if (flatFormat) {
             if (!cajasKey || !largoKey || !variedadKey) {
               throw new Error(
-                "Formato plano: no se detectaron Nombre Variedad / Cajas Disponibles / Largo.",
+                "Formato plano: no se detectaron Variedad / Cajas / Largo (o Variety Name / Available Boxes / Length).",
               );
             }
           } else if (!tipoFlorKey || !cajasKey || !largoKey || !variedadKey) {
@@ -3921,6 +3968,7 @@
         }
 
         function prependAgroganaHeader(rows) {
+          if (optNoQtyFilterEnabled) return;
           if (!rows || !rows.length) return;
 
           var title0 = String((rows[0] && rows[0].tipoFlor) || "")
@@ -3969,9 +4017,9 @@
         }
 
         function buildExcelHeaders() {
-          var headers = ["#", "BOX TYPE", "VARIETY"];
+          var headers = ["#", "BOX TYPE", "LENGTH", "VARIETY"];
           if (optColorEnabled) headers.push("COLOR");
-          if (pricesActive()) headers.push("PRICE");
+          if (pricesActive()) headers.push("PRICE PER STEM");
           return headers;
         }
 
@@ -3979,6 +4027,7 @@
           var cells = [
             r.cajas == null ? "" : r.cajas,
             r.grado == null ? "" : r.grado,
+            r.largo == null ? "" : r.largo,
             r.variedad == null ? "" : r.variedad,
           ];
           if (optColorEnabled) {
