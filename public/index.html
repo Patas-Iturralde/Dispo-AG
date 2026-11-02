@@ -230,7 +230,7 @@
       }
       .drop-grid {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 1rem;
         margin-bottom: 0.85rem;
       }
@@ -239,6 +239,16 @@
         color: var(--muted);
         margin: 0 0 1.25rem 0;
         line-height: 1.45;
+      }
+      .file-reminder > p {
+        margin: 0 0 0.35rem 0;
+      }
+      .file-reminder ul {
+        margin: 0;
+        padding-left: 1.15rem;
+      }
+      .file-reminder li {
+        margin-bottom: 0.15rem;
       }
       .file-reminder.hidden {
         display: none;
@@ -1175,11 +1185,41 @@
               </div>
               <div class="dz-filename" id="name5">&nbsp;</div>
             </label>
+            <label class="file-label" id="dz5" for="file6">
+              <input type="file" name="file6" accept=".xls,.xlsx" id="file6" />
+              <div class="dz-title">Archivo 6</div>
+              <div class="dz-hint">
+                Arrastra aquí o haz clic para seleccionar
+              </div>
+              <div class="dz-filename" id="name6">&nbsp;</div>
+            </label>
+            <label class="file-label" id="dz6" for="file7">
+              <input type="file" name="file7" accept=".xls,.xlsx" id="file7" />
+              <div class="dz-title">Archivo 7</div>
+              <div class="dz-hint">
+                Arrastra aquí o haz clic para seleccionar
+              </div>
+              <div class="dz-filename" id="name7">&nbsp;</div>
+            </label>
+            <label class="file-label" id="dz7" for="file8">
+              <input type="file" name="file8" accept=".xls,.xlsx" id="file8" />
+              <div class="dz-title">Archivo 8</div>
+              <div class="dz-hint">
+                Arrastra aquí o haz clic para seleccionar
+              </div>
+              <div class="dz-filename" id="name8">&nbsp;</div>
+            </label>
           </div>
-          <p class="file-reminder" id="fileReminder">
-            Añadir el archivo de Tallos 25 y Eb para los sweet pea y Tallos 5 y
-            Qb para los amaranthus
-          </p>
+          <div class="file-reminder" id="fileReminder">
+            <p>Añadir el archivo:</p>
+            <ul>
+              <li>Tallos 5 Qb para los amaranthus y spray roses</li>
+              <li>Tallos 5 Eb para dewi y highlander</li>
+              <li>Tallos 10 Eb para flores de verano</li>
+              <li>Tallos 25 Qb: rosas</li>
+              <li>Tallos 25 Eb: lathyrus y claveles</li>
+            </ul>
+          </div>
           <button
             type="submit"
             class="btn btn-primary btn-process"
@@ -1448,6 +1488,9 @@
           document.getElementById("file3"),
           document.getElementById("file4"),
           document.getElementById("file5"),
+          document.getElementById("file6"),
+          document.getElementById("file7"),
+          document.getElementById("file8"),
         ];
         var names = [
           document.getElementById("name1"),
@@ -1455,6 +1498,9 @@
           document.getElementById("name3"),
           document.getElementById("name4"),
           document.getElementById("name5"),
+          document.getElementById("name6"),
+          document.getElementById("name7"),
+          document.getElementById("name8"),
         ];
         var zones = [
           document.getElementById("dz0"),
@@ -1462,6 +1508,9 @@
           document.getElementById("dz2"),
           document.getElementById("dz3"),
           document.getElementById("dz4"),
+          document.getElementById("dz5"),
+          document.getElementById("dz6"),
+          document.getElementById("dz7"),
         ];
         var messageArea = document.getElementById("messageArea");
         var resultSection = document.getElementById("resultSection");
@@ -1473,7 +1522,7 @@
         var fileReminder = document.getElementById("fileReminder");
         var excelWorkbook = null;
         var finalHeaders = ["QUANTITY", "BOX TYPE", "LENGTH", "VARIETY"];
-        var droppedFiles = [null, null, null, null, null];
+        var droppedFiles = [null, null, null, null, null, null, null, null];
 
         function showMessage(text, type) {
           messageArea.innerHTML =
@@ -3909,7 +3958,17 @@
               };
             })
             .filter(function (r) {
-              return r.variedad;
+              if (!r.variedad) return false;
+              // Anular registros E/EB de rosas (no deben aparecer)
+              var sp = normalizeSpecies(r.tipoFlor);
+              if (sp === "ROSAS" || sp === "ROSES") {
+                var g = String(r.grado || "")
+                  .trim()
+                  .toUpperCase()
+                  .replace(/\s+/g, "");
+                if (g === "E" || g === "EB" || /^EB/.test(g)) return false;
+              }
+              return true;
             });
 
           var groupsMap = new Map();
@@ -4174,12 +4233,11 @@
           .getElementById("uploadForm")
           .addEventListener("submit", function (e) {
             e.preventDefault();
-            var f1 = droppedFiles[0] || (inputs[0] && inputs[0].files[0]);
-            var f2 = droppedFiles[1] || (inputs[1] && inputs[1].files[0]);
-            var f3 = droppedFiles[2] || (inputs[2] && inputs[2].files[0]);
-            var f4 = droppedFiles[3] || (inputs[3] && inputs[3].files[0]);
-            var f5 = droppedFiles[4] || (inputs[4] && inputs[4].files[0]);
-            var files = [f1, f2, f3, f4, f5].filter(Boolean);
+            var files = [];
+            for (var fi = 0; fi < inputs.length; fi++) {
+              var f = droppedFiles[fi] || (inputs[fi] && inputs[fi].files[0]);
+              if (f) files.push(f);
+            }
             if (files.length === 0) {
               showMessage("Selecciona al menos 1 archivo.", "error");
               return;

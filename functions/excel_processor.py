@@ -173,11 +173,22 @@ def process_three_files(*paths: str) -> pd.DataFrame:
     tipo_col = _find_column(consolidated, "tipo flor", "Tipo flor", "Tipo Flor")
     variedad_col = _find_column(consolidated, "variedad", "Variedad")
     largo_col = _find_column(consolidated, "largo", "longitud", "cm", "Largo")
+    grado_col = _find_column(consolidated, "grado", "tipo", "box type", "type")
 
     if tipo_col is None:
         return consolidated
 
     consolidated["_tipo_norm"] = consolidated[tipo_col].apply(_normalize_species)
+
+    # Anular registros E/EB de rosas
+    if grado_col is not None:
+        def _is_e_grade(val):
+            g = "" if pd.isna(val) else str(val).strip().upper().replace(" ", "")
+            return g == "E" or g == "EB" or g.startswith("EB")
+
+        rose_mask = consolidated["_tipo_norm"].isin(["ROSAS", "ROSES"])
+        e_mask = consolidated[grado_col].apply(_is_e_grade)
+        consolidated = consolidated[~(rose_mask & e_mask)].copy()
 
     result_rows = []
     first_col_name = consolidated.columns[0]

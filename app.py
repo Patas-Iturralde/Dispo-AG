@@ -44,7 +44,10 @@ def process():
     f3 = request.files.get("file3")
     f4 = request.files.get("file4")
     f5 = request.files.get("file5")
-    uploaded = [f for f in (f1, f2, f3, f4, f5) if f and f.filename]
+    f6 = request.files.get("file6")
+    f7 = request.files.get("file7")
+    f8 = request.files.get("file8")
+    uploaded = [f for f in (f1, f2, f3, f4, f5, f6, f7, f8) if f and f.filename]
     if not uploaded:
         flash("Debes seleccionar al menos 1 archivo.", "error")
         return redirect(url_for("index"))
