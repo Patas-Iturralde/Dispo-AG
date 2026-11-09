@@ -60,7 +60,6 @@
         border-radius: var(--radius-sm);
         padding: 1rem;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-        min-height: 280px;
         display: flex;
         flex-direction: column;
       }
@@ -68,14 +67,13 @@
         margin-bottom: 0.65rem;
       }
       .prices-drop {
-        flex: 1;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
         position: relative;
-        min-height: 180px;
+        min-height: 140px;
         border: 2px dashed var(--border);
         border-radius: var(--radius-sm);
         padding: 1rem 0.75rem;
@@ -235,23 +233,17 @@
         margin-bottom: 0.85rem;
       }
       .file-reminder {
-        font-size: 0.875rem;
+        font-size: 0.78rem;
         color: var(--muted);
-        margin: 0 0 1.25rem 0;
+        margin: 0.85rem 0 0;
         line-height: 1.45;
+        white-space: pre-line;
       }
-      .file-reminder > p {
-        margin: 0 0 0.35rem 0;
-      }
-      .file-reminder ul {
-        margin: 0;
-        padding-left: 1.15rem;
-      }
-      .file-reminder li {
-        margin-bottom: 0.15rem;
-      }
-      .file-reminder.hidden {
-        display: none;
+      .file-reminder > strong {
+        display: block;
+        margin-bottom: 0.35rem;
+        color: var(--text);
+        font-weight: 600;
       }
       @media (max-width: 900px) {
         .drop-grid {
@@ -1210,16 +1202,6 @@
               <div class="dz-filename" id="name8">&nbsp;</div>
             </label>
           </div>
-          <div class="file-reminder" id="fileReminder">
-            <p>Añadir el archivo:</p>
-            <ul>
-              <li>Tallos 5 Qb para los amaranthus y spray roses</li>
-              <li>Tallos 5 Eb para dewi y highlander</li>
-              <li>Tallos 10 Eb para flores de verano</li>
-              <li>Tallos 25 Qb: rosas</li>
-              <li>Tallos 25 Eb: lathyrus y claveles</li>
-            </ul>
-          </div>
           <button
             type="submit"
             class="btn btn-primary btn-process"
@@ -1291,6 +1273,14 @@
           </label>
           <div class="prices-status" id="pricesStatus">
             Sin archivo adicional. Si activas Precios arriba, se usa la lista default. Si subes un archivo aquí, tiene prioridad.
+          </div>
+          <div class="file-reminder" id="fileReminder">
+            <strong>Añadir el archivo:</strong>
+Tallos 5 Qb para los amaranthus y spray roses
+Tallos 5 Eb para dewi y highlander
+Tallos 10 Eb para flores de verano
+Tallos 25 Qb: rosas
+Tallos 25 Eb: lathyrus y claveles
           </div>
         </div>
         <div class="top-varieties-panel" id="topVarietiesPanel">
@@ -1519,7 +1509,6 @@
         var resultInfo = document.getElementById("resultInfo");
         var resultText = document.getElementById("resultText");
         var submitBtn = document.getElementById("submitBtn");
-        var fileReminder = document.getElementById("fileReminder");
         var excelWorkbook = null;
         var finalHeaders = ["QUANTITY", "BOX TYPE", "LENGTH", "VARIETY"];
         var droppedFiles = [null, null, null, null, null, null, null, null];
@@ -1541,19 +1530,6 @@
           return div.innerHTML;
         }
 
-        function updateFileReminder() {
-          if (!fileReminder) return;
-          var hasFile = false;
-          for (var i = 0; i < inputs.length; i++) {
-            if (droppedFiles[i] || (inputs[i] && inputs[i].files[0])) {
-              hasFile = true;
-              break;
-            }
-          }
-          if (hasFile) fileReminder.classList.add("hidden");
-          else fileReminder.classList.remove("hidden");
-        }
-
         function updateName(i) {
           var f = droppedFiles[i] || (inputs[i] && inputs[i].files[0]);
           if (f) {
@@ -1563,7 +1539,6 @@
             names[i].textContent = "\u00a0";
             zones[i].classList.remove("has-file");
           }
-          updateFileReminder();
         }
 
         inputs.forEach(function (inp, i) {
@@ -1729,9 +1704,57 @@
           if (!list.length) return "Sin variedades detectadas.";
           return list
             .map(function (item, i) {
-              return i + 1 + ". " + item.name + " — " + item.total;
+              return (
+                i +
+                1 +
+                ". " +
+                item.name +
+                " — " +
+                item.total +
+                " cajas"
+              );
             })
             .join("\n");
+        }
+
+        /** Variedades con menos cajas: candidatas a darse de baja */
+        function computeBajaVarieties(allRows, n) {
+          if (!allRows.length) return [];
+          var sample = allRows[0] || {};
+          var cajasKey = findKey(sample, [
+            "cajas disponibles",
+            "available boxes",
+            "# cajas",
+            "cajas",
+            "boxes",
+          ]);
+          var variedadKey = findKey(sample, [
+            "nombre variedad",
+            "variety name",
+            "variedad",
+            "variety",
+          ]);
+          if (!cajasKey || !variedadKey) return [];
+          var totals = new Map();
+          allRows.forEach(function (r) {
+            var variedad = String(
+              r[variedadKey] == null ? "" : r[variedadKey],
+            ).trim();
+            if (!variedad) return;
+            var key = variedad.toLowerCase();
+            var cajas = parseCajasRaw(r[cajasKey]);
+            if (!totals.has(key)) totals.set(key, { name: variedad, total: 0 });
+            totals.get(key).total += cajas;
+          });
+          return Array.from(totals.values())
+            .filter(function (item) {
+              return item.total > 0;
+            })
+            .sort(function (a, b) {
+              if (a.total !== b.total) return a.total - b.total;
+              return a.name.localeCompare(b.name, "es", { sensitivity: "base" });
+            })
+            .slice(0, n || 5);
         }
 
 
@@ -2773,7 +2796,7 @@
         function syncAppStateFromProcess(allRows, processedRows, tsv) {
           AppState.rawRows = allRows;
           AppState.processedRows = processedRows;
-          AppState.topVarieties = computeTopN(allRows, 5);
+          AppState.topVarieties = computeBajaVarieties(allRows, 5);
           AppState.tsv = tsv;
           AppState.updatedAt = new Date().toISOString();
           AppState.priceMaster = priceMaster;
@@ -4042,41 +4065,6 @@
           return a === "SMILAX" || b === "SMILAX";
         }
 
-        function appendSmilaxSection(rows) {
-          if (optNoQtyFilterEnabled) return;
-          if (!rows || !rows.length) return;
-
-          var hasSmilaxTitle = rows.some(function (r) {
-            return (
-              r &&
-              r.isTitle &&
-              String(r.tipoFlor || "")
-                .trim()
-                .toUpperCase() === "SMILAX"
-            );
-          });
-          if (hasSmilaxTitle) return;
-
-          var lastIsSeparator = !!(
-            rows[rows.length - 1] && rows[rows.length - 1].isSeparator
-          );
-
-          // Separador en blanco entre especies (igual que ROSAS/AMARANTHUS)
-          if (!lastIsSeparator) rows.push({ isSeparator: true });
-
-          rows.push({ tipoFlor: "SMILAX", isTitle: true });
-          // Formato: [cajas, grado, largo, variedad]
-          rows.push({
-            tipoFlor: "SMILAX",
-            cajas: 5,
-            grado: "QB",
-            largo: "120",
-            variedad: "SMILAX GARLAND",
-            color: "",
-            isTitle: false,
-          });
-        }
-
         function prependAgroganaHeader(rows) {
           if (optNoQtyFilterEnabled) return;
           if (!rows || !rows.length) return;
@@ -4252,16 +4240,21 @@
               })
               .then(function (results) {
                 var allRows = [].concat.apply([], results);
-                var topVarieties = computeTopN(allRows, 5);
+                var bajaVarieties = computeBajaVarieties(allRows, 5);
                 var processedRows = processRows(allRows);
                 prependAgroganaHeader(processedRows);
-                appendSmilaxSection(processedRows);
                 var priced = applyPricesToRows(processedRows);
                 processedRows = priced.rows;
                 var tsv = rowsToTsvNoHeader(processedRows);
                 resultText.value = tsv;
-                topVarietiesBox.value = formatTopVarieties(topVarieties);
+                topVarietiesBox.value = formatTopVarieties(bajaVarieties);
                 topVarietiesPanel.classList.add("visible");
+                try {
+                  topVarietiesPanel.scrollIntoView({
+                    behavior: "smooth",
+                    block: "nearest",
+                  });
+                } catch (scrollErr) {}
                 resultInfo.textContent =
                   processedRows.length +
                   " filas (incluyendo títulos y separadores)";
@@ -4329,13 +4322,11 @@
             updateMissingPricesUI([]);
             clearMessage();
             clearAppStateProcessed();
-            droppedFiles = [null, null, null, null, null];
+            droppedFiles = [null, null, null, null, null, null, null, null];
             inputs.forEach(function (inp) {
               if (inp) inp.value = "";
             });
-            [0, 1, 2, 3, 4].forEach(function (i) {
-              updateName(i);
-            });
+            for (var ni = 0; ni < inputs.length; ni++) updateName(ni);
           });
 
         (function initNotes() {
