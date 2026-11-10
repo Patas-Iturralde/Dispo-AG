@@ -4001,6 +4001,9 @@ Tallos 25 Eb: lathyrus y claveles
             groupsMap.get(key).push(r);
           });
 
+          // Con el tope de cantidad activo, el resultado incluye 3 QB extra de SMILAX GARLAND 120.
+          addSmilaxGarlandBonus(groupsMap, flatFormat);
+
           function orderTipo(t) {
             var name = normalizeSpecies(t);
             if (name === "ROSAS" || name === "ROSES") return [0, "ROSAS"];
@@ -4063,6 +4066,47 @@ Tallos 25 Eb: lathyrus y claveles
           var a = normalizeSpecies(name);
           var b = normalizeSpecies(key);
           return a === "SMILAX" || b === "SMILAX";
+        }
+
+        function isSmilaxGarlandQb120(row) {
+          if (normalizeVariedad(row.variedad) !== "SMILAX GARLAND") return false;
+          if (largoSortKey(row.largo) !== 120) return false;
+          var g = String(row.grado || "")
+            .trim()
+            .toUpperCase()
+            .replace(/\s+/g, "");
+          return g === "QB" || g === "Q";
+        }
+
+        function addSmilaxGarlandBonus(groupsMap, flatFormat) {
+          if (optNoQtyFilterEnabled) return;
+
+          var groupKey = null;
+          groupsMap.forEach(function (_, k) {
+            if (!groupKey && isSmilaxSpecies(k, k)) groupKey = k;
+          });
+          if (!groupKey) {
+            groupKey = "SMILAX";
+            groupsMap.set(groupKey, []);
+          }
+
+          var rows = groupsMap.get(groupKey);
+          var i;
+          for (i = 0; i < rows.length; i++) {
+            if (!isSmilaxGarlandQb120(rows[i])) continue;
+            rows[i].cajas = (parseInt(rows[i].cajas, 10) || 0) + 3;
+            return;
+          }
+
+          rows.push({
+            tipoFlor: displaySpeciesName("SMILAX"),
+            cajas: 3,
+            grado: flatFormat ? "Q" : "QB",
+            largo: "120",
+            variedad: "SMILAX GARLAND",
+            color: "",
+            sourcePrice: "",
+          });
         }
 
         function prependAgroganaHeader(rows) {
