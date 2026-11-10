@@ -4008,6 +4008,7 @@ Tallos 25 Eb: lathyrus y claveles
             var name = normalizeSpecies(t);
             if (name === "ROSAS" || name === "ROSES") return [0, "ROSAS"];
             if (name === "SPRAY ROSAS" || name === "SPRAY ROSE") return [1, name];
+            if (isSmilaxSpecies(name, t)) return [4, "SMILAX"];
             if (name === "OTROS") return [3, name];
             return [2, name];
           }
